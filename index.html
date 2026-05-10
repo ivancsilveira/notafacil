@@ -419,7 +419,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil</div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#888;font-weight:400;background:#F0F0F0;padding:2px 6px;border-radius:4px;margin-left:4px;">v1.0.1</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -538,8 +538,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            NotaFácil v1.0 — Organização automática de notas, recibos e garantias com IA.<br>
-            Powered by Claude + Firebase.
+            <strong>NotaFácil v1.0.1</strong><br>
+            Organização automática de notas, recibos e garantias com IA.<br>
+            Powered by Claude + Firebase.<br>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10</span>
           </p>
         </div>
       </div>
@@ -811,11 +813,23 @@ async function handleFileSelect(event) {
   }
 
   try {
-    showLoading('Lendo o documento com Claude...');
+    showLoading('Preparando o documento...');
 
-    // Converter pra base64
-    const base64 = await fileToBase64(file);
-    const mediaType = file.type === 'application/pdf' ? 'application/pdf' : (file.type || 'image/jpeg');
+    let base64, mediaType, processedFile;
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      // PDF: envia direto como base64
+      base64 = await fileToBase64(file);
+      mediaType = 'application/pdf';
+      processedFile = file;
+    } else {
+      // Qualquer imagem (jpg, png, heic, webp, etc) → converte pra JPEG
+      const result = await convertImageToJpeg(file);
+      base64 = result.base64;
+      mediaType = 'image/jpeg';
+      processedFile = result.blob;
+    }
 
     // Chamar Claude
     showLoading('Claude está analisando o documento...');
@@ -832,7 +846,8 @@ async function handleFileSelect(event) {
 
     // Abrir modal de revisão
     pendingDoc = {
-      file: file,
+      file: processedFile,
+      originalName: file.name,
       base64: base64,
       mediaType: mediaType,
       analysis: analysis,
@@ -854,6 +869,62 @@ function fileToBase64(file) {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result.split(',')[1]);
     reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Converte qualquer imagem (incluindo HEIC do iPhone) pra JPEG
+// usando o canvas do navegador. Também redimensiona se for muito grande.
+async function convertImageToJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          // Redimensiona se for muito grande (max 1600px no maior lado)
+          const MAX = 1600;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            if (width > height) {
+              height = Math.round(height * (MAX / width));
+              width = MAX;
+            } else {
+              width = Math.round(width * (MAX / height));
+              height = MAX;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          // Fundo branco caso a imagem tenha transparência
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('Não consegui converter a imagem'));
+              return;
+            }
+            const r2 = new FileReader();
+            r2.onload = () => {
+              const base64 = r2.result.split(',')[1];
+              resolve({ base64, blob });
+            };
+            r2.onerror = () => reject(new Error('Erro ao ler imagem convertida'));
+            r2.readAsDataURL(blob);
+          }, 'image/jpeg', 0.85);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => reject(new Error('Formato de imagem não suportado pelo navegador. Tente JPG ou PNG.'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
     reader.readAsDataURL(file);
   });
 }
@@ -1023,7 +1094,9 @@ async function saveDocument() {
     // Upload da foto pro Storage
     showLoading('Enviando foto pro Firebase...');
     const { ref, uploadBytes, getDownloadURL, addDoc, collection } = window.fbHelpers;
-    const fileName = `notas/${currentUser.uid}/${Date.now()}_${pendingDoc.file.name}`;
+    const ext = pendingDoc.mediaType === 'application/pdf' ? 'pdf' : 'jpg';
+    const safeName = (pendingDoc.originalName || 'documento').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileName = `notas/${currentUser.uid}/${Date.now()}_${safeName}.${ext}`;
     const fileRef = ref(window.fbStorage, fileName);
     await uploadBytes(fileRef, pendingDoc.file);
     const photoUrl = await getDownloadURL(fileRef);
