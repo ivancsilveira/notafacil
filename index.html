@@ -412,7 +412,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.2 · 10/05/2026
+    Versão 1.0.3 · 10/05/2026
   </div>
 </div>
 
@@ -422,7 +422,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.2</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.3</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -549,10 +549,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.2</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.3</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.2 - melhor visualização de versão + conversão de imagem)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.3 - corrige detecção de PDF via magic bytes)</span>
           </p>
         </div>
       </div>
@@ -839,7 +839,9 @@ async function handleFileSelect(event) {
     showLoading('Preparando o documento...');
 
     let base64, mediaType, processedFile;
-    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+    // Detecção robusta de PDF: 3 formas de identificar
+    const isPdf = await detectIsPdf(file);
 
     if (isPdf) {
       // PDF: envia direto como base64
@@ -847,7 +849,7 @@ async function handleFileSelect(event) {
       mediaType = 'application/pdf';
       processedFile = file;
     } else {
-      // Qualquer imagem (jpg, png, heic, webp, etc) → converte pra JPEG
+      // Tenta tratar como imagem (jpg, png, heic, webp, etc) → converte pra JPEG
       const result = await convertImageToJpeg(file);
       base64 = result.base64;
       mediaType = 'image/jpeg';
@@ -881,11 +883,35 @@ async function handleFileSelect(event) {
 
   } catch (err) {
     hideLoading();
-    console.error(err);
-    showToast('Erro: ' + err.message, 'error');
+    console.error('Erro no upload:', err);
+    showToast('Erro: ' + (err.message || 'Algo deu errado'), 'error');
   }
 }
 window.handleFileSelect = handleFileSelect;
+
+// Detecção SUPER ROBUSTA de PDF (3 formas)
+async function detectIsPdf(file) {
+  // 1. Pelo tipo MIME
+  if (file.type === 'application/pdf') return true;
+
+  // 2. Pela extensão do nome
+  if (file.name && file.name.toLowerCase().endsWith('.pdf')) return true;
+
+  // 3. Lendo os "magic bytes" do arquivo (mais confiável)
+  // Todo PDF começa com "%PDF-" (bytes 25 50 44 46 2D)
+  try {
+    const slice = file.slice(0, 5);
+    const buf = await slice.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+      return true;
+    }
+  } catch (e) {
+    console.warn('Não consegui ler magic bytes:', e);
+  }
+
+  return false;
+}
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
