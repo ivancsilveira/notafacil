@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FF6B35">
+<title>NotaFácil</title>
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22NotaF%C3%A1cil%22,%22short_name%22:%22NotaF%C3%A1cil%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23FF6B35%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg%20xmlns%3D%5C%22http%3A//www.w3.org/2000/svg%5C%22%20viewBox%3D%5C%220%200%20100%20100%5C%22%3E%3Crect%20width%3D%5C%22100%5C%22%20height%3D%5C%22100%5C%22%20fill%3D%5C%22%23FF6B35%5C%22%20rx%3D%5C%2220%5C%22/%3E%3Ctext%20x%3D%5C%2250%5C%22%20y%3D%5C%2265%5C%22%20font-size%3D%5C%2250%5C%22%20text-anchor%3D%5C%22middle%5C%22%20fill%3D%5C%22white%5C%22%3ENF%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22}]}">
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow-x: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #F5F5F5;
+    color: #1A1A1A;
+    padding-bottom: 80px;
+  }
+
+  /* HEADER */
+  .header {
+    background: white;
+    padding: 16px;
+    border-bottom: 1px solid #E5E5E5;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo {
+    width: 40px; height: 40px;
+    background: #FF6B35;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .header-title { font-size: 18px; font-weight: 600; flex: 1; }
+  .header-sub { font-size: 12px; color: #888; }
+
+  /* AVATAR USER */
+  .user-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #E5E5E5;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* CONTENT */
+  .content { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+  /* CARDS */
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #E5E5E5;
+  }
+
+  /* BUTTONS */
+  .btn {
+    background: #FF6B35;
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 0.2s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    background: white;
+    color: #1A1A1A;
+    border: 1px solid #E5E5E5;
+  }
+  .btn-google {
+    background: white;
+    color: #1A1A1A;
+    border: 1px solid #E5E5E5;
+    font-weight: 500;
+  }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; }
+  .btn-small { padding: 8px 14px; font-size: 14px; }
+
+  /* TABS / BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #E5E5E5;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-nav .tab {
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    color: #888;
+    font-size: 11px;
+    border: none;
+    background: none;
+  }
+  .bottom-nav .tab.active { color: #FF6B35; }
+  .bottom-nav .tab-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
+  /* LOGIN SCREEN */
+  .login-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+    color: white;
+  }
+  .login-logo {
+    width: 100px; height: 100px;
+    background: white;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #FF6B35;
+    margin-bottom: 24px;
+    font-weight: bold;
+  }
+  .login-screen h1 { font-size: 32px; margin-bottom: 8px; }
+  .login-screen p { font-size: 16px; opacity: 0.9; margin-bottom: 32px; max-width: 320px; }
+  .login-screen .btn-google { width: 100%; max-width: 320px; }
+
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* UPLOAD CARD */
+  .upload-card {
+    background: white;
+    border: 2px dashed #FF6B35;
+    border-radius: 12px;
+    padding: 32px 16px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .upload-icon { font-size: 48px; margin-bottom: 8px; }
+  .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .upload-sub { font-size: 13px; color: #888; margin-bottom: 16px; }
+  #fileInput, #cameraInput { display: none; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 11px;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 16px 0 8px;
+    padding: 0 4px;
+  }
+
+  /* DOCUMENT CARD */
+  .doc-card {
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+  }
+  .doc-photo {
+    width: 64px; height: 64px;
+    background: #F5F5F5;
+    border-radius: 8px;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .doc-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .doc-meta { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    font-weight: 500;
+  }
+  .badge-ok { background: #E8F5E0; color: #2D6B0F; }
+  .badge-warn { background: #FFF3D9; color: #8B5A0F; }
+  .badge-danger { background: #FCE5E5; color: #8B1F1F; }
+  .badge-info { background: #E5F0FB; color: #1F4C8B; }
+
+  /* FOLDER */
+  .folder {
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .folder:active { background: #F9F9F9; }
+  .folder-icon { font-size: 28px; }
+  .folder-info { flex: 1; }
+  .folder-name { font-size: 15px; font-weight: 600; }
+  .folder-count { font-size: 12px; color: #888; }
+  .folder-arrow { color: #CCC; font-size: 20px; }
+
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat {
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .stat-num { font-size: 20px; font-weight: 600; color: #FF6B35; }
+  .stat-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: flex-end;
+    z-index: 200;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+  .modal-close {
+    float: right;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #888;
+    margin-top: -4px;
+  }
+
+  /* FORM */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; color: #555; margin-bottom: 6px; display: block; font-weight: 500; }
+  .form-input, .form-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E5E5E5;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: white;
+  }
+  .form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #FF6B35;
+  }
+  .preview-img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    background: #F5F5F5;
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+
+  /* LOADING */
+  .loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 300;
+  }
+  .loading-overlay.active { display: flex; }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 4px solid #E5E5E5;
+    border-top-color: #FF6B35;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: #555; text-align: center; max-width: 280px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1A1A1A;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 400;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: #C53030; }
+  .toast.success { background: #2D6B0F; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+    font-size: 14px;
+  }
+  .empty-state .ico { font-size: 48px; margin-bottom: 8px; opacity: 0.4; display: block; }
+
+  /* DETAIL VIEW */
+  .detail-photo {
+    width: 100%;
+    max-height: 240px;
+    object-fit: contain;
+    background: #F5F5F5;
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #F0F0F0;
+    font-size: 14px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: #888; }
+  .detail-value { font-weight: 500; text-align: right; max-width: 60%; }
+
+  /* CONFIG SCREEN */
+  .config-section { margin-bottom: 20px; }
+  .config-section h3 { font-size: 14px; margin-bottom: 8px; color: #555; }
+  .config-warning {
+    background: #FFF3D9;
+    border: 1px solid #F7C97A;
+    color: #8B5A0F;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-logo">NF</div>
+  <h1>NotaFácil</h1>
+  <p>Suas notas, recibos e garantias organizados automaticamente</p>
+  <button class="btn btn-google" onclick="loginGoogle()">
+    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    Entrar com Google
+  </button>
+</div>
+
+<!-- MAIN APP (escondido até login) -->
+<div id="mainApp" style="display:none;">
+
+  <header class="header">
+    <div class="logo">NF</div>
+    <div style="flex:1;">
+      <div class="header-title">NotaFácil</div>
+      <div class="header-sub" id="userName">Carregando...</div>
+    </div>
+    <div class="user-avatar" onclick="showScreen('config')">
+      <img id="userAvatar" src="" alt="">
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- TELA: ENVIAR -->
+    <div id="screen-upload" class="screen active">
+      <div class="upload-card">
+        <div class="upload-icon">📸</div>
+        <div class="upload-title">Tirar foto ou enviar arquivo</div>
+        <div class="upload-sub">Foto da nota, PDF do email ou print do WhatsApp</div>
+        <div class="btn-row">
+          <button class="btn" onclick="document.getElementById('cameraInput').click()">📷 Câmera</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">📎 Arquivo</button>
+        </div>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+        <input type="file" id="fileInput" accept="image/*,application/pdf" onchange="handleFileSelect(event)">
+      </div>
+
+      <div class="section-label">Últimos enviados</div>
+      <div id="recentDocs">
+        <div class="empty-state">
+          <span class="ico">📭</span>
+          Nenhum documento ainda.<br>
+          Envia o primeiro pra começar!
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA: PASTAS -->
+    <div id="screen-folders" class="screen">
+      <div class="stats" id="statsRow">
+        <div class="stat"><div class="stat-num" id="statNotas">0</div><div class="stat-lbl">Notas</div></div>
+        <div class="stat"><div class="stat-num" id="statRecibos">0</div><div class="stat-lbl">Recibos</div></div>
+        <div class="stat"><div class="stat-num" id="statBoletos">0</div><div class="stat-lbl">Boletos</div></div>
+      </div>
+
+      <div class="section-label">Pastas</div>
+      <div class="folder" onclick="openFolder('nota_fiscal')">
+        <span class="folder-icon">🧾</span>
+        <div class="folder-info">
+          <div class="folder-name">Notas Fiscais</div>
+          <div class="folder-count" id="countNotas">0 documentos</div>
+        </div>
+        <span class="folder-arrow">›</span>
+      </div>
+      <div class="folder" onclick="openFolder('recibo')">
+        <span class="folder-icon">📄</span>
+        <div class="folder-info">
+          <div class="folder-name">Recibos</div>
+          <div class="folder-count" id="countRecibos">0 documentos</div>
+        </div>
+        <span class="folder-arrow">›</span>
+      </div>
+      <div class="folder" onclick="openFolder('boleto')">
+        <span class="folder-icon">🏷️</span>
+        <div class="folder-info">
+          <div class="folder-name">Boletos</div>
+          <div class="folder-count" id="countBoletos">0 documentos</div>
+        </div>
+        <span class="folder-arrow">›</span>
+      </div>
+      <div class="folder" onclick="openFolder('outros')">
+        <span class="folder-icon">📁</span>
+        <div class="folder-info">
+          <div class="folder-name">Outros / Revisar</div>
+          <div class="folder-count" id="countOutros">0 documentos</div>
+        </div>
+        <span class="folder-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- TELA: GARANTIAS -->
+    <div id="screen-warranty" class="screen">
+      <div class="section-label">Garantias ativas</div>
+      <div id="warrantyList">
+        <div class="empty-state">
+          <span class="ico">🛡️</span>
+          Nenhuma garantia cadastrada ainda.
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA: CONFIG -->
+    <div id="screen-config" class="screen">
+      <div class="card">
+        <div class="config-section">
+          <h3>👤 Conta</h3>
+          <div id="configUser" style="font-size:14px;color:#555;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="config-section">
+          <h3>🔑 Chave da API do Claude</h3>
+          <div class="config-warning">
+            ⚠️ Coloque sua chave (sk-ant-api03-...) abaixo. Ela fica salva apenas no seu celular.
+          </div>
+          <input type="password" id="claudeKey" class="form-input" placeholder="sk-ant-api03-...">
+          <button class="btn btn-small" style="margin-top:8px;" onclick="saveClaudeKey()">Salvar chave</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="config-section">
+          <h3>🚪 Sessão</h3>
+          <button class="btn btn-secondary" onclick="logout()">Sair da conta</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="config-section">
+          <h3>ℹ️ Sobre</h3>
+          <p style="font-size:13px;color:#888;line-height:1.5;">
+            NotaFácil v1.0 — Organização automática de notas, recibos e garantias com IA.<br>
+            Powered by Claude + Firebase.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA: LISTA DE PASTA -->
+    <div id="screen-folderlist" class="screen">
+      <button class="btn btn-secondary btn-small" style="margin-bottom:12px;width:auto;display:inline-flex;" onclick="showScreen('folders')">‹ Voltar</button>
+      <h2 id="folderTitle" style="font-size:18px;margin-bottom:12px;"></h2>
+      <div id="folderContents"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="tab active" data-screen="upload" onclick="showScreen('upload')">
+      <span class="tab-icon">📤</span>Enviar
+    </button>
+    <button class="tab" data-screen="folders" onclick="showScreen('folders')">
+      <span class="tab-icon">📁</span>Pastas
+    </button>
+    <button class="tab" data-screen="warranty" onclick="showScreen('warranty')">
+      <span class="tab-icon">🛡️</span>Garantias
+    </button>
+    <button class="tab" data-screen="config" onclick="showScreen('config')">
+      <span class="tab-icon">⚙️</span>Ajustes
+    </button>
+  </nav>
+
+</div>
+
+<!-- MODAL: REVISAR/EDITAR DOCUMENTO -->
+<div id="reviewModal" class="modal-overlay" onclick="if(event.target===this)closeModal('reviewModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('reviewModal')">×</button>
+    <div class="modal-title">📋 Revisar documento</div>
+    <img id="reviewPhoto" class="preview-img" alt="">
+
+    <div class="form-group">
+      <label class="form-label">Tipo de documento</label>
+      <select id="reviewType" class="form-select">
+        <option value="nota_fiscal">Nota Fiscal</option>
+        <option value="recibo">Recibo</option>
+        <option value="boleto">Boleto</option>
+        <option value="outros">Outros</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Produto / Descrição</label>
+      <input type="text" id="reviewProduct" class="form-input">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Loja / Estabelecimento</label>
+      <input type="text" id="reviewStore" class="form-input">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Valor (R$)</label>
+      <input type="text" id="reviewValue" class="form-input">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Data da compra</label>
+      <input type="date" id="reviewDate" class="form-input">
+    </div>
+
+    <div class="form-group" id="warrantyGroup">
+      <label class="form-label">Garantia (meses)</label>
+      <select id="reviewWarranty" class="form-select">
+        <option value="">Sem garantia</option>
+        <option value="3">3 meses (legal não-durável)</option>
+        <option value="12">12 meses (legal durável + fab.)</option>
+        <option value="6">6 meses</option>
+        <option value="18">18 meses</option>
+        <option value="24">24 meses (2 anos)</option>
+        <option value="36">36 meses (3 anos)</option>
+      </select>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeModal('reviewModal')">Cancelar</button>
+      <button class="btn" onclick="saveDocument()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHES DO DOCUMENTO -->
+<div id="detailModal" class="modal-overlay" onclick="if(event.target===this)closeModal('detailModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+    <div class="modal-title" id="detailTitle">Documento</div>
+    <img id="detailPhoto" class="detail-photo" alt="">
+    <div id="detailContent"></div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="deleteCurrentDoc()" style="background:#FCE5E5;color:#8B1F1F;border-color:#F5C0C0;">🗑️ Excluir</button>
+      <button class="btn" id="detailActionBtn">📅 Agendar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Processando...</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, query, where, orderBy,
+    doc, deleteDoc, updateDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {
+    getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDKPT6PanR75OwX_aICmbhzr08ct3sz9uc",
+    authDomain: "notafacil-99434.firebaseapp.com",
+    projectId: "notafacil-99434",
+    storageBucket: "notafacil-99434.firebasestorage.app",
+    messagingSenderId: "117443301099",
+    appId: "1:117443301099:web:110cae60706be406cfb8ae"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+  const provider = new GoogleAuthProvider();
+
+  // expor globalmente
+  window.fbAuth = auth;
+  window.fbDb = db;
+  window.fbStorage = storage;
+  window.fbProvider = provider;
+  window.fbHelpers = {
+    signInWithPopup, signOut, onAuthStateChanged,
+    collection, addDoc, getDocs, query, where, orderBy,
+    doc, deleteDoc, updateDoc, serverTimestamp,
+    ref, uploadBytes, getDownloadURL, deleteObject
+  };
+
+  // dispara evento quando firebase tá pronto
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<!-- APP LOGIC -->
+<script>
+let currentUser = null;
+let currentDocs = [];
+let pendingDoc = null; // doc sendo revisado
+let currentDetailDoc = null;
+let currentFolderType = null;
+
+const TIPO_LABELS = {
+  nota_fiscal: 'Nota Fiscal',
+  recibo: 'Recibo',
+  boleto: 'Boleto',
+  outros: 'Outros'
+};
+const TIPO_ICONS = {
+  nota_fiscal: '🧾',
+  recibo: '📄',
+  boleto: '🏷️',
+  outros: '📁'
+};
+
+// ========== INIT ==========
+window.addEventListener('firebase-ready', () => {
+  const { onAuthStateChanged } = window.fbHelpers;
+  onAuthStateChanged(window.fbAuth, (user) => {
+    if (user) {
+      currentUser = user;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      document.getElementById('userName').textContent = user.displayName || user.email;
+      document.getElementById('userAvatar').src = user.photoURL || '';
+      document.getElementById('configUser').innerHTML = `
+        <strong>${user.displayName || ''}</strong><br>
+        <span style="color:#888;font-size:13px;">${user.email}</span>
+      `;
+      loadClaudeKey();
+      loadDocuments();
+    } else {
+      currentUser = null;
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('mainApp').style.display = 'none';
+    }
+  });
+});
+
+// ========== AUTH ==========
+async function loginGoogle() {
+  try {
+    const { signInWithPopup } = window.fbHelpers;
+    await signInWithPopup(window.fbAuth, window.fbProvider);
+  } catch (err) {
+    console.error('Login error:', err);
+    showToast('Erro ao entrar: ' + err.message, 'error');
+  }
+}
+window.loginGoogle = loginGoogle;
+
+async function logout() {
+  try {
+    const { signOut } = window.fbHelpers;
+    await signOut(window.fbAuth);
+  } catch (err) {
+    showToast('Erro ao sair', 'error');
+  }
+}
+window.logout = logout;
+
+// ========== NAVEGAÇÃO ==========
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav .tab').forEach(t => t.classList.remove('active'));
+
+  const screen = document.getElementById('screen-' + name);
+  if (screen) screen.classList.add('active');
+
+  const tab = document.querySelector(`.bottom-nav .tab[data-screen="${name}"]`);
+  if (tab) tab.classList.add('active');
+
+  if (name === 'folders') updateFolderCounts();
+  if (name === 'warranty') renderWarranties();
+}
+window.showScreen = showScreen;
+
+// ========== CHAVE CLAUDE ==========
+function loadClaudeKey() {
+  const key = localStorage.getItem('claudeKey_' + currentUser.uid) || '';
+  document.getElementById('claudeKey').value = key;
+}
+function saveClaudeKey() {
+  const key = document.getElementById('claudeKey').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    showToast('Chave inválida. Deve começar com sk-ant-', 'error');
+    return;
+  }
+  localStorage.setItem('claudeKey_' + currentUser.uid, key);
+  showToast('Chave salva!', 'success');
+}
+function getClaudeKey() {
+  return localStorage.getItem('claudeKey_' + currentUser.uid) || '';
+}
+window.saveClaudeKey = saveClaudeKey;
+
+// ========== UPLOAD ==========
+async function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = ''; // reset input
+
+  if (!getClaudeKey()) {
+    showToast('Configura a chave do Claude primeiro em Ajustes!', 'error');
+    showScreen('config');
+    return;
+  }
+
+  try {
+    showLoading('Lendo o documento com Claude...');
+
+    // Converter pra base64
+    const base64 = await fileToBase64(file);
+    const mediaType = file.type === 'application/pdf' ? 'application/pdf' : (file.type || 'image/jpeg');
+
+    // Chamar Claude
+    showLoading('Claude está analisando o documento...');
+    const analysis = await analyzeWithClaude(base64, mediaType);
+
+    // Buscar foto do produto se for nota fiscal
+    let productPhoto = null;
+    if (analysis.tipo === 'nota_fiscal' && analysis.produto) {
+      showLoading('Buscando foto do produto...');
+      productPhoto = await searchProductImage(analysis.produto);
+    }
+
+    hideLoading();
+
+    // Abrir modal de revisão
+    pendingDoc = {
+      file: file,
+      base64: base64,
+      mediaType: mediaType,
+      analysis: analysis,
+      productPhoto: productPhoto
+    };
+
+    openReviewModal();
+
+  } catch (err) {
+    hideLoading();
+    console.error(err);
+    showToast('Erro: ' + err.message, 'error');
+  }
+}
+window.handleFileSelect = handleFileSelect;
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ========== CLAUDE API ==========
+async function analyzeWithClaude(base64, mediaType) {
+  const prompt = `Analise este documento brasileiro e extraia as informações. Responda APENAS um JSON puro, sem markdown, sem comentários, no formato exato:
+{
+  "tipo": "nota_fiscal" | "recibo" | "boleto" | "outros",
+  "produto": "descrição do produto principal (só pra nota fiscal, senão null)",
+  "loja": "nome da loja/estabelecimento/empresa",
+  "cnpj": "CNPJ se visível, senão null",
+  "valor": número (apenas o valor, sem R$),
+  "data": "YYYY-MM-DD" (data da compra/emissão),
+  "vencimento": "YYYY-MM-DD" (apenas pra boletos, senão null),
+  "garantia_sugerida_meses": número (sugestão pelo CDC: 90 dias=3, durável=12),
+  "resumo": "frase curta descrevendo o documento"
+}
+
+Se não conseguir identificar algum campo, use null. Para "tipo": nota_fiscal é cupom/NF de produtos, recibo é prestação de serviço, boleto é cobrança bancária. Se for foto borrada ou ilegível, marca tipo="outros" e resumo="Documento ilegível".`;
+
+  const isImage = !mediaType.includes('pdf');
+  const sourceBlock = isImage
+    ? { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } }
+    : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } };
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': getClaudeKey(),
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [sourceBlock, { type: 'text', text: prompt }]
+      }]
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error('Claude API: ' + response.status + ' - ' + errText.substring(0, 200));
+  }
+
+  const data = await response.json();
+  let text = data.content.map(c => c.text || '').join('').trim();
+  // Remover possíveis markdown fences
+  text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('Resposta do Claude:', text);
+    throw new Error('Não consegui entender a resposta do Claude. Tenta de novo.');
+  }
+}
+
+// ========== BUSCA FOTO DO PRODUTO ==========
+async function searchProductImage(productName) {
+  // Usa o Google Custom Search via a API do DuckDuckGo (sem chave necessária)
+  // Como alternativa, usamos uma busca simples via i.imgur ou um placeholder
+  // Para simplicidade, vamos pedir pro Claude sugerir uma URL OU usar um placeholder
+  try {
+    const query = encodeURIComponent(productName);
+    // Usamos a API pública do DuckDuckGo Instant Answer (não tem CORS aberto, então fallback)
+    // Melhor abordagem: pedir pro próprio Claude buscar uma URL de imagem
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': getClaudeKey(),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 512,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
+        messages: [{
+          role: 'user',
+          content: `Busque na web uma foto do produto: "${productName}". Retorne APENAS a URL direta de uma imagem (.jpg, .png, .webp) do produto, sem nenhum outro texto. Se não achar URL direta de imagem, retorne "NONE".`
+        }]
+      })
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    const text = data.content.map(c => c.text || '').join('').trim();
+
+    // Extrair URL
+    const urlMatch = text.match(/https?:\/\/[^\s"'<>)]+\.(jpg|jpeg|png|webp)/i);
+    if (urlMatch) return urlMatch[0];
+    return null;
+  } catch (e) {
+    console.warn('Busca de imagem falhou:', e);
+    return null;
+  }
+}
+
+// ========== MODAL DE REVISÃO ==========
+function openReviewModal() {
+  const a = pendingDoc.analysis;
+
+  // Mostrar preview
+  const previewSrc = pendingDoc.mediaType.includes('pdf')
+    ? `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23E5E5E5' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' font-size='16' fill='%23888'%3EPDF%3C/text%3E%3C/svg%3E`
+    : `data:${pendingDoc.mediaType};base64,${pendingDoc.base64}`;
+  document.getElementById('reviewPhoto').src = previewSrc;
+
+  document.getElementById('reviewType').value = a.tipo || 'outros';
+  document.getElementById('reviewProduct').value = a.produto || a.resumo || '';
+  document.getElementById('reviewStore').value = a.loja || '';
+  document.getElementById('reviewValue').value = a.valor || '';
+  document.getElementById('reviewDate').value = a.data || new Date().toISOString().split('T')[0];
+
+  // Garantia: só mostra pra nota fiscal, e sugere
+  toggleWarrantyField();
+  document.getElementById('reviewWarranty').value = a.garantia_sugerida_meses || '';
+
+  document.getElementById('reviewType').addEventListener('change', toggleWarrantyField);
+
+  openModal('reviewModal');
+}
+
+function toggleWarrantyField() {
+  const tipo = document.getElementById('reviewType').value;
+  document.getElementById('warrantyGroup').style.display = (tipo === 'nota_fiscal') ? 'block' : 'none';
+}
+
+// ========== SALVAR DOCUMENTO ==========
+async function saveDocument() {
+  if (!pendingDoc) return;
+
+  try {
+    showLoading('Salvando documento...');
+
+    const tipo = document.getElementById('reviewType').value;
+    const garantiaMeses = parseInt(document.getElementById('reviewWarranty').value) || null;
+    const dataCompra = document.getElementById('reviewDate').value;
+
+    const docData = {
+      tipo: tipo,
+      produto: document.getElementById('reviewProduct').value.trim(),
+      loja: document.getElementById('reviewStore').value.trim(),
+      valor: parseFloat(document.getElementById('reviewValue').value) || 0,
+      data: dataCompra,
+      cnpj: pendingDoc.analysis.cnpj || null,
+      vencimento: pendingDoc.analysis.vencimento || null,
+      garantia_meses: garantiaMeses,
+      garantia_vence: null,
+      productPhoto: pendingDoc.productPhoto || null,
+      criado_em: window.fbHelpers.serverTimestamp(),
+      uid: currentUser.uid
+    };
+
+    if (garantiaMeses && dataCompra && tipo === 'nota_fiscal') {
+      const venceDate = new Date(dataCompra);
+      venceDate.setMonth(venceDate.getMonth() + garantiaMeses);
+      docData.garantia_vence = venceDate.toISOString().split('T')[0];
+    }
+
+    // Upload da foto pro Storage
+    showLoading('Enviando foto pro Firebase...');
+    const { ref, uploadBytes, getDownloadURL, addDoc, collection } = window.fbHelpers;
+    const fileName = `notas/${currentUser.uid}/${Date.now()}_${pendingDoc.file.name}`;
+    const fileRef = ref(window.fbStorage, fileName);
+    await uploadBytes(fileRef, pendingDoc.file);
+    const photoUrl = await getDownloadURL(fileRef);
+    docData.photoUrl = photoUrl;
+    docData.photoPath = fileName;
+
+    // Salvar no Firestore
+    showLoading('Quase lá...');
+    await addDoc(collection(window.fbDb, 'documentos'), docData);
+
+    hideLoading();
+    closeModal('reviewModal');
+    pendingDoc = null;
+    showToast('Documento salvo! ✅', 'success');
+
+    await loadDocuments();
+  } catch (err) {
+    hideLoading();
+    console.error(err);
+    showToast('Erro ao salvar: ' + err.message, 'error');
+  }
+}
+window.saveDocument = saveDocument;
+
+// ========== CARREGAR DOCS ==========
+async function loadDocuments() {
+  try {
+    const { collection, query, where, orderBy, getDocs } = window.fbHelpers;
+    const q = query(
+      collection(window.fbDb, 'documentos'),
+      where('uid', '==', currentUser.uid)
+    );
+    const snap = await getDocs(q);
+    currentDocs = [];
+    snap.forEach(d => currentDocs.push({ id: d.id, ...d.data() }));
+    // ordenar por data desc no cliente
+    currentDocs.sort((a, b) => {
+      const da = a.data || '';
+      const db = b.data || '';
+      return db.localeCompare(da);
+    });
+
+    renderRecent();
+    updateFolderCounts();
+    renderWarranties();
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao carregar: ' + err.message, 'error');
+  }
+}
+
+function renderRecent() {
+  const container = document.getElementById('recentDocs');
+  if (currentDocs.length === 0) {
+    container.innerHTML = `<div class="empty-state"><span class="ico">📭</span>Nenhum documento ainda.<br>Envia o primeiro pra começar!</div>`;
+    return;
+  }
+  const recents = currentDocs.slice(0, 5);
+  container.innerHTML = recents.map(d => docCardHTML(d)).join('');
+}
+
+function docCardHTML(d) {
+  const photo = d.productPhoto || d.photoUrl;
+  const photoHTML = photo
+    ? `<img src="${escapeHtml(photo)}" onerror="this.parentElement.innerHTML='${TIPO_ICONS[d.tipo]||'📄'}'">`
+    : (TIPO_ICONS[d.tipo] || '📄');
+
+  let badge = `<span class="badge badge-info">${TIPO_LABELS[d.tipo]||d.tipo}</span>`;
+  if (d.tipo === 'nota_fiscal' && d.garantia_vence) {
+    const days = daysUntil(d.garantia_vence);
+    if (days < 0) badge = `<span class="badge badge-danger">Garantia vencida</span>`;
+    else if (days <= 7) badge = `<span class="badge badge-danger">Vence em ${days} dias</span>`;
+    else if (days <= 30) badge = `<span class="badge badge-warn">Vence em ${days} dias</span>`;
+    else badge = `<span class="badge badge-ok">Garantia ativa</span>`;
+  }
+
+  return `
+    <div class="doc-card" onclick="showDocDetail('${d.id}')">
+      <div class="doc-photo">${photoHTML}</div>
+      <div class="doc-info">
+        <div class="doc-name">${escapeHtml(d.produto || d.loja || 'Documento')}</div>
+        <div class="doc-meta">${escapeHtml(d.loja || '')} ${d.data ? '· ' + formatDate(d.data) : ''}</div>
+        ${badge}
+        ${d.valor ? ` <span class="badge badge-info">R$ ${formatMoney(d.valor)}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function updateFolderCounts() {
+  const counts = { nota_fiscal: 0, recibo: 0, boleto: 0, outros: 0 };
+  currentDocs.forEach(d => { if (counts[d.tipo] !== undefined) counts[d.tipo]++; });
+  document.getElementById('countNotas').textContent = counts.nota_fiscal + ' documentos';
+  document.getElementById('countRecibos').textContent = counts.recibo + ' documentos';
+  document.getElementById('countBoletos').textContent = counts.boleto + ' documentos';
+  document.getElementById('countOutros').textContent = counts.outros + ' documentos';
+  document.getElementById('statNotas').textContent = counts.nota_fiscal;
+  document.getElementById('statRecibos').textContent = counts.recibo;
+  document.getElementById('statBoletos').textContent = counts.boleto;
+}
+
+function openFolder(type) {
+  currentFolderType = type;
+  const docs = currentDocs.filter(d => d.tipo === type);
+  document.getElementById('folderTitle').textContent = `${TIPO_ICONS[type]} ${TIPO_LABELS[type]}`;
+  const container = document.getElementById('folderContents');
+  if (docs.length === 0) {
+    container.innerHTML = `<div class="empty-state"><span class="ico">📭</span>Pasta vazia</div>`;
+  } else {
+    container.innerHTML = docs.map(d => docCardHTML(d)).join('');
+  }
+  showScreen('folderlist');
+}
+window.openFolder = openFolder;
+
+// ========== GARANTIAS ==========
+function renderWarranties() {
+  const container = document.getElementById('warrantyList');
+  const warranties = currentDocs
+    .filter(d => d.tipo === 'nota_fiscal' && d.garantia_vence)
+    .sort((a, b) => a.garantia_vence.localeCompare(b.garantia_vence));
+
+  if (warranties.length === 0) {
+    container.innerHTML = `<div class="empty-state"><span class="ico">🛡️</span>Nenhuma garantia cadastrada ainda.</div>`;
+    return;
+  }
+  container.innerHTML = warranties.map(d => docCardHTML(d)).join('');
+}
+
+// ========== DETALHE / EXCLUIR ==========
+function showDocDetail(id) {
+  const d = currentDocs.find(x => x.id === id);
+  if (!d) return;
+  currentDetailDoc = d;
+
+  document.getElementById('detailTitle').textContent = d.produto || d.loja || 'Documento';
+  document.getElementById('detailPhoto').src = d.productPhoto || d.photoUrl || '';
+
+  let html = `<div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${TIPO_LABELS[d.tipo]||d.tipo}</span></div>`;
+  if (d.loja) html += `<div class="detail-row"><span class="detail-label">Loja</span><span class="detail-value">${escapeHtml(d.loja)}</span></div>`;
+  if (d.cnpj) html += `<div class="detail-row"><span class="detail-label">CNPJ</span><span class="detail-value">${escapeHtml(d.cnpj)}</span></div>`;
+  if (d.valor) html += `<div class="detail-row"><span class="detail-label">Valor</span><span class="detail-value">R$ ${formatMoney(d.valor)}</span></div>`;
+  if (d.data) html += `<div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${formatDate(d.data)}</span></div>`;
+  if (d.vencimento) html += `<div class="detail-row"><span class="detail-label">Vencimento</span><span class="detail-value">${formatDate(d.vencimento)}</span></div>`;
+  if (d.garantia_meses) html += `<div class="detail-row"><span class="detail-label">Garantia</span><span class="detail-value">${d.garantia_meses} meses</span></div>`;
+  if (d.garantia_vence) {
+    const days = daysUntil(d.garantia_vence);
+    const cor = days < 0 ? '#8B1F1F' : (days <= 30 ? '#8B5A0F' : '#2D6B0F');
+    html += `<div class="detail-row"><span class="detail-label">Garantia vence em</span><span class="detail-value" style="color:${cor};">${formatDate(d.garantia_vence)} (${days < 0 ? 'vencida há ' + Math.abs(days) + ' dias' : 'em ' + days + ' dias'})</span></div>`;
+  }
+
+  document.getElementById('detailContent').innerHTML = html;
+
+  // Botão de ação: agendar (se tem garantia) ou ver no maps (cnpj)
+  const actionBtn = document.getElementById('detailActionBtn');
+  if (d.garantia_vence) {
+    actionBtn.style.display = 'flex';
+    actionBtn.innerHTML = '📅 Agendar aviso no Google Agenda';
+    actionBtn.onclick = () => createCalendarEvent(d);
+  } else {
+    actionBtn.style.display = 'none';
+  }
+
+  openModal('detailModal');
+}
+window.showDocDetail = showDocDetail;
+
+async function deleteCurrentDoc() {
+  if (!currentDetailDoc) return;
+  if (!confirm('Tem certeza que quer excluir esse documento?')) return;
+
+  try {
+    showLoading('Excluindo...');
+    const { doc, deleteDoc, ref, deleteObject } = window.fbHelpers;
+
+    // deletar foto do storage
+    if (currentDetailDoc.photoPath) {
+      try {
+        await deleteObject(ref(window.fbStorage, currentDetailDoc.photoPath));
+      } catch (e) { console.warn('Erro ao deletar foto:', e); }
+    }
+
+    // deletar do firestore
+    await deleteDoc(doc(window.fbDb, 'documentos', currentDetailDoc.id));
+
+    hideLoading();
+    closeModal('detailModal');
+    currentDetailDoc = null;
+    showToast('Excluído!', 'success');
+    await loadDocuments();
+  } catch (err) {
+    hideLoading();
+    showToast('Erro ao excluir', 'error');
+  }
+}
+window.deleteCurrentDoc = deleteCurrentDoc;
+
+// ========== GOOGLE AGENDA ==========
+function createCalendarEvent(d) {
+  // Cria URL do Google Calendar 30 dias antes do vencimento
+  const vence = new Date(d.garantia_vence);
+  const aviso = new Date(vence);
+  aviso.setDate(aviso.getDate() - 30);
+
+  const dateStart = aviso.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 8);
+  const dateEnd = dateStart;
+
+  const title = `⚠️ Garantia vence em 30 dias: ${d.produto || d.loja}`;
+  const details = `Produto: ${d.produto || ''}\nLoja: ${d.loja || ''}\nValor: R$ ${formatMoney(d.valor || 0)}\nData da compra: ${formatDate(d.data || '')}\nGarantia vence em: ${formatDate(d.garantia_vence)}\n\nNota fiscal anexa: ${d.photoUrl || ''}`;
+
+  const url = `https://calendar.google.com/calendar/r/eventedit?` +
+    `text=${encodeURIComponent(title)}` +
+    `&dates=${dateStart}/${dateEnd}` +
+    `&details=${encodeURIComponent(details)}` +
+    `&sf=true&output=xml`;
+
+  window.open(url, '_blank');
+}
+
+// ========== HELPERS ==========
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+window.closeModal = closeModal;
+
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text || 'Processando...';
+  document.getElementById('loadingOverlay').classList.add('active');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('active');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function formatMoney(v) {
+  return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(s) {
+  if (!s) return '';
+  const parts = s.split('-');
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return s;
+}
+
+function daysUntil(dateStr) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(dateStr);
+  target.setHours(0,0,0,0);
+  return Math.round((target - today) / (1000 * 60 * 60 * 24));
+}
+</script>
+
+</body>
+</html>
