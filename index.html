@@ -2,10 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#FF6B35">
 <title>NotaFácil</title>
-<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22NotaF%C3%A1cil%22,%22short_name%22:%22NotaF%C3%A1cil%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23FF6B35%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg%20xmlns%3D%5C%22http%3A//www.w3.org/2000/svg%5C%22%20viewBox%3D%5C%220%200%20100%20100%5C%22%3E%3Crect%20width%3D%5C%22100%5C%22%20height%3D%5C%22100%5C%22%20fill%3D%5C%22%23FF6B35%5C%22%20rx%3D%5C%2220%5C%22/%3E%3Ctext%20x%3D%5C%2250%5C%22%20y%3D%5C%2265%5C%22%20font-size%3D%5C%2250%5C%22%20text-anchor%3D%5C%22middle%5C%22%20fill%3D%5C%22white%5C%22%3ENF%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22}]}">
+
+<!-- PWA: manifest e ícones -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+<!-- iOS Safari (iPhone/iPad) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="NotaFácil">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -412,7 +424,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.4 · 10/05/2026
+    Versão 1.0.5 · 10/05/2026
   </div>
 </div>
 
@@ -422,7 +434,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.4</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.5</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -548,10 +560,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.4</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.5</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.4 - servidor seguro, chave protegida na nuvem)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.5 - agora é instalável como app)</span>
           </p>
         </div>
       </div>
@@ -1379,6 +1391,55 @@ function daysUntil(dateStr) {
   target.setHours(0,0,0,0);
   return Math.round((target - today) / (1000 * 60 * 60 * 24));
 }
+
+// ========== PWA: SERVICE WORKER E INSTALAÇÃO ==========
+// Registra o service worker pra funcionar offline e cachear
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log('Service Worker registrado:', reg.scope))
+      .catch(err => console.warn('Service Worker falhou:', err));
+  });
+}
+
+// Captura o evento de "instalável" e mostra botão pro usuário
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  showInstallButton();
+});
+
+function showInstallButton() {
+  // Só mostra se ainda não está instalado e tem o prompt disponível
+  if (!deferredInstallPrompt) return;
+  if (document.getElementById('installBtn')) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'installBtn';
+  btn.innerHTML = '📲 Instalar app';
+  btn.style.cssText = 'position:fixed;bottom:90px;right:16px;background:#FF6B35;color:white;border:none;padding:12px 18px;border-radius:30px;font-size:14px;font-weight:600;box-shadow:0 4px 12px rgba(255,107,53,0.4);cursor:pointer;z-index:9999;display:flex;align-items:center;gap:6px;';
+  btn.onclick = async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const result = await deferredInstallPrompt.userChoice;
+    if (result.outcome === 'accepted') {
+      showToast('App instalado! ✅', 'success');
+    }
+    deferredInstallPrompt = null;
+    btn.remove();
+  };
+  document.body.appendChild(btn);
+}
+
+// Esconde botão depois que instalou
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.remove();
+  showToast('NotaFácil instalado com sucesso!', 'success');
+});
 </script>
 
 </body>
