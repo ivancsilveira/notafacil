@@ -2,7 +2,7 @@
 
 > Sistema web de organização automática de notas fiscais, recibos, boletos e garantias com IA (Claude) e Firebase.
 
-**Versão atual:** v1.0.10
+**Versão atual:** v1.0.13
 **Última atualização:** 10/05/2026
 **Construído por:** Ivan Silveira (com assistência do Claude da Anthropic)
 
@@ -194,6 +194,9 @@ Se mudar o `service-worker.js`, atualizar também a constante `CACHE_NAME` pra f
 | v1.0.8 | Zoom estilo app Fotos (ancorado no ponto que pinça), Calendário Apple (.ics) detectado automaticamente em iPhone/iPad/Mac |
 | v1.0.9 | Criar pasta personalizada direto do modal de "Revisar documento" quando Claude não identificar o tipo |
 | v1.0.10 | Extrai chave de acesso da NF-e/NFC-e (44 dígitos) + botão "Mover" pra reorganizar documentos entre pastas |
+| v1.0.11 | Dias de aviso da garantia configuráveis (Ajustes + por agendamento), validação visual da chave de acesso (44 dígitos), prompt mais rigoroso pro Claude |
+| v1.0.12 | Linha digitável de boleto (47-48 dígitos), botão "Agendar pagamento" cria evento no calendário no dia do vencimento às 10h com a linha digitável no corpo do evento |
+| v1.0.13 | Processamento em lote: selecionar vários arquivos/fotos de uma vez, revisar cada um em sequência, botão "Pular este" |
 
 ---
 

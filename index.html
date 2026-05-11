@@ -582,7 +582,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.10 · 10/05/2026
+    Versão 1.0.13 · 10/05/2026
   </div>
 </div>
 
@@ -592,7 +592,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.10</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.13</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -612,8 +612,8 @@
           <button class="btn" onclick="document.getElementById('cameraInput').click()">📷 Câmera</button>
           <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">📎 Arquivo</button>
         </div>
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
-        <input type="file" id="fileInput" accept="image/*,application/pdf" onchange="handleFileSelect(event)">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple onchange="handleFileSelect(event)">
+        <input type="file" id="fileInput" accept="image/*,application/pdf" multiple onchange="handleFileSelect(event)">
       </div>
 
       <div class="section-label">Últimos enviados</div>
@@ -722,6 +722,24 @@
 
       <div class="card">
         <div class="config-section">
+          <h3>📅 Aviso de garantia</h3>
+          <p style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.4;">Quantos dias ANTES da garantia vencer você quer ser avisado no calendário?</p>
+          <select id="cfgWarningDays" class="form-select" onchange="saveWarningDays()">
+            <option value="7">7 dias antes</option>
+            <option value="15">15 dias antes</option>
+            <option value="30" selected>30 dias antes (padrão)</option>
+            <option value="45">45 dias antes</option>
+            <option value="60">60 dias antes</option>
+            <option value="90">90 dias antes</option>
+            <option value="custom">Outro... (digitar)</option>
+          </select>
+          <input type="number" id="cfgWarningDaysCustom" class="form-input" placeholder="Digite os dias (ex: 20)" min="1" max="365" style="margin-top:8px;display:none;" oninput="saveWarningDays()">
+          <p style="font-size:11px;color:#888;margin-top:6px;line-height:1.4;">Você pode mudar esse valor na hora de agendar cada garantia.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="config-section">
           <h3>🚪 Sessão</h3>
           <button class="btn btn-secondary" onclick="logout()">Sair da conta</button>
         </div>
@@ -739,10 +757,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.10</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.13</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.10 - chave de acesso da NF-e + mover documento entre pastas)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.13 - múltiplos arquivos de uma vez)</span>
           </p>
         </div>
       </div>
@@ -779,6 +797,18 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal('reviewModal')">×</button>
     <div class="modal-title">📋 Revisar documento</div>
+
+    <!-- Indicador de progresso quando processar vários arquivos em fila -->
+    <div id="reviewProgress" style="display:none;background:#FFF3E8;border:1px solid #FFD4B8;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#8B4500;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">📦</span>
+        <span id="reviewProgressText">Documento X de Y</span>
+      </div>
+      <div style="background:#FFE0C2;height:4px;border-radius:2px;margin-top:8px;overflow:hidden;">
+        <div id="reviewProgressBar" style="background:#FF6B35;height:100%;width:0%;transition:width 0.3s;"></div>
+      </div>
+    </div>
+
     <img id="reviewPhoto" class="preview-img" alt="">
 
     <div class="form-group">
@@ -813,8 +843,16 @@
 
     <div class="form-group" id="chaveAcessoGroup" style="display:none;">
       <label class="form-label">Chave de acesso (NF-e/NFC-e) <span style="font-weight:400;color:#888;font-size:11px;">— opcional</span></label>
-      <input type="text" id="reviewChaveAcesso" class="form-input" placeholder="44 dígitos da nota fiscal eletrônica" maxlength="50" inputmode="numeric">
-      <p style="font-size:11px;color:#888;margin-top:4px;">Esse código vem no rodapé ou perto do código de barras da NF-e/NFC-e. Útil pra consultar no site da SEFAZ.</p>
+      <input type="text" id="reviewChaveAcesso" class="form-input" placeholder="44 dígitos da nota fiscal eletrônica" maxlength="60" inputmode="numeric" oninput="validateChaveAcesso()">
+      <p id="chaveAcessoHint" style="font-size:11px;color:#888;margin-top:4px;">Esse código vem no rodapé ou perto do código de barras da NF-e/NFC-e. Útil pra consultar no site da SEFAZ.</p>
+      <p id="chaveAcessoStatus" style="font-size:12px;margin-top:4px;display:none;"></p>
+    </div>
+
+    <div class="form-group" id="linhaDigitavelGroup" style="display:none;">
+      <label class="form-label">Linha digitável (boleto) <span style="font-weight:400;color:#888;font-size:11px;">— pra pagar no banco</span></label>
+      <input type="text" id="reviewLinhaDigitavel" class="form-input" placeholder="47 ou 48 dígitos do código de barras" maxlength="60" inputmode="numeric" oninput="validateLinhaDigitavel()">
+      <p style="font-size:11px;color:#888;margin-top:4px;">Esse é o código longo no topo do boleto. Vai aparecer no calendário pra você copiar e pagar.</p>
+      <p id="linhaDigitavelStatus" style="font-size:12px;margin-top:4px;display:none;"></p>
     </div>
 
     <div class="form-group" id="warrantyGroup">
@@ -844,9 +882,10 @@
       </div>
     </div>
 
-    <div class="btn-row" style="margin-top:16px;">
-      <button class="btn btn-secondary" onclick="closeModal('reviewModal')">Cancelar</button>
-      <button class="btn" onclick="saveDocument()">💾 Salvar</button>
+    <div class="btn-row" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button id="reviewSkipBtn" class="btn btn-secondary" style="display:none;flex:1;min-width:0;" onclick="skipCurrentDocInQueue()">⏭️ Pular este</button>
+      <button class="btn btn-secondary" style="flex:1;min-width:0;" onclick="cancelReviewFlow()">Cancelar</button>
+      <button class="btn" style="flex:2;min-width:0;" onclick="saveDocument()">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -924,6 +963,40 @@
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn btn-secondary" onclick="closeModal('createFolderModal')">Cancelar</button>
       <button class="btn" onclick="saveNewFolder()">💾 Criar pasta</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AGENDAR GARANTIA (escolher quantos dias antes) -->
+<div id="scheduleModal" class="modal-overlay" style="z-index:250;" onclick="if(event.target===this)closeModal('scheduleModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('scheduleModal')">×</button>
+    <div class="modal-title">📅 Agendar lembrete</div>
+    <p style="color:#666;font-size:13px;margin-bottom:14px;">Quantos dias antes da garantia vencer você quer ser avisado?</p>
+
+    <div id="scheduleProductPreview" style="background:#FFF3E8;border-radius:8px;padding:10px;margin-bottom:14px;font-size:13px;color:#8B4500;">
+      <!-- preenchido por JS -->
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Avisar antes</label>
+      <select id="scheduleDays" class="form-select" onchange="onScheduleDaysChange()">
+        <option value="7">7 dias antes</option>
+        <option value="15">15 dias antes</option>
+        <option value="30">30 dias antes</option>
+        <option value="45">45 dias antes</option>
+        <option value="60">60 dias antes</option>
+        <option value="90">90 dias antes</option>
+        <option value="custom">Outro... (digitar)</option>
+      </select>
+      <input type="number" id="scheduleDaysCustom" class="form-input" placeholder="Digite os dias (ex: 20)" min="1" max="365" style="margin-top:8px;display:none;">
+    </div>
+
+    <p id="scheduleDateInfo" style="font-size:12px;color:#888;text-align:center;margin-bottom:10px;"></p>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeModal('scheduleModal')">Cancelar</button>
+      <button class="btn" onclick="confirmSchedule()">📅 Adicionar</button>
     </div>
   </div>
 </div>
@@ -1093,6 +1166,7 @@ function showScreen(name) {
 
   if (name === 'folders') updateFolderCounts();
   if (name === 'warranty') renderWarranties();
+  if (name === 'config') loadWarningDaysConfig();
 }
 window.showScreen = showScreen;
 
@@ -1112,14 +1186,93 @@ function forceReload() {
 }
 window.forceReload = forceReload;
 
-// ========== UPLOAD ==========
+// ========== UPLOAD (com suporte a múltiplos arquivos em fila) ==========
+// Fila de arquivos a processar
+let fileQueue = [];
+let fileQueueTotal = 0;
+let fileQueueCurrentIndex = 0;
+
 async function handleFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+  const files = Array.from(event.target.files || []);
+  if (files.length === 0) return;
   event.target.value = ''; // reset input
-  await processFile(file);
+
+  if (files.length === 1) {
+    // Caso simples: 1 arquivo
+    await processFile(files[0]);
+    return;
+  }
+
+  // Caso múltiplo: enfileira e começa a processar
+  fileQueue = files.slice();
+  fileQueueTotal = files.length;
+  fileQueueCurrentIndex = 0;
+  showToast(`📦 ${files.length} arquivos na fila. Vou processar um por um!`, 'success');
+  await processNextInQueue();
 }
 window.handleFileSelect = handleFileSelect;
+
+// Processa o próximo da fila (chamado depois de salvar ou pular um)
+async function processNextInQueue() {
+  if (fileQueue.length === 0) {
+    // Fim da fila
+    if (fileQueueTotal > 1) {
+      showToast(`✅ Todos os ${fileQueueTotal} arquivos foram processados!`, 'success');
+    }
+    fileQueueTotal = 0;
+    fileQueueCurrentIndex = 0;
+    return;
+  }
+  fileQueueCurrentIndex++;
+  const next = fileQueue.shift();
+  await processFile(next);
+}
+
+// Indica visualmente o progresso da fila no modal de revisão
+function updateReviewProgress() {
+  const progressBox = document.getElementById('reviewProgress');
+  const progressText = document.getElementById('reviewProgressText');
+  const progressBar = document.getElementById('reviewProgressBar');
+  const skipBtn = document.getElementById('reviewSkipBtn');
+  if (!progressBox) return;
+
+  if (fileQueueTotal > 1) {
+    progressBox.style.display = 'block';
+    progressText.textContent = `Documento ${fileQueueCurrentIndex} de ${fileQueueTotal}`;
+    const pct = ((fileQueueCurrentIndex - 1) / fileQueueTotal) * 100;
+    progressBar.style.width = pct + '%';
+    // Mostra botão "Pular este"
+    if (skipBtn) skipBtn.style.display = 'flex';
+  } else {
+    progressBox.style.display = 'none';
+    if (skipBtn) skipBtn.style.display = 'none';
+  }
+}
+
+// Pula o documento atual e vai pro próximo da fila
+async function skipCurrentDocInQueue() {
+  if (!confirm('Pular este documento? Ele NÃO será salvo.')) return;
+  closeModal('reviewModal');
+  pendingDoc = null;
+  showToast('Pulado', 'info');
+  // Continua processando o resto da fila
+  setTimeout(() => processNextInQueue(), 300);
+}
+window.skipCurrentDocInQueue = skipCurrentDocInQueue;
+
+// Cancela todo o fluxo (descarta resto da fila)
+function cancelReviewFlow() {
+  if (fileQueue.length > 0) {
+    if (!confirm(`Cancelar? Você tem ${fileQueue.length} documento(s) ainda na fila que serão descartados.`)) return;
+    fileQueue = [];
+    fileQueueTotal = 0;
+    fileQueueCurrentIndex = 0;
+    showToast('Fila cancelada', 'info');
+  }
+  closeModal('reviewModal');
+  pendingDoc = null;
+}
+window.cancelReviewFlow = cancelReviewFlow;
 
 // Processa um arquivo (vem de upload, câmera ou compartilhamento de outro app)
 async function processFile(file) {
@@ -1130,7 +1283,10 @@ async function processFile(file) {
   }
 
   try {
-    showLoading('Preparando o documento...');
+    const progressLabel = fileQueueTotal > 1
+      ? `[${fileQueueCurrentIndex}/${fileQueueTotal}] Preparando...`
+      : 'Preparando o documento...';
+    showLoading(progressLabel);
 
     let base64, mediaType, processedFile;
 
@@ -1151,7 +1307,10 @@ async function processFile(file) {
     }
 
     // Chamar Claude
-    showLoading('Claude está analisando o documento...');
+    const claudeLabel = fileQueueTotal > 1
+      ? `[${fileQueueCurrentIndex}/${fileQueueTotal}] Claude está analisando...`
+      : 'Claude está analisando o documento...';
+    showLoading(claudeLabel);
     const analysis = await analyzeWithClaude(base64, mediaType);
 
     // Buscar foto do produto se for nota fiscal
@@ -1178,7 +1337,11 @@ async function processFile(file) {
   } catch (err) {
     hideLoading();
     console.error('Erro no upload:', err);
-    showToast('Erro: ' + (err.message || 'Algo deu errado'), 'error');
+    showToast(`Erro no documento ${fileQueueCurrentIndex || ''}: ${err.message || 'Algo deu errado'}`, 'error');
+    // Se estava processando uma fila, tenta continuar
+    if (fileQueue.length > 0) {
+      setTimeout(() => processNextInQueue(), 1500);
+    }
   }
 }
 window.processFile = processFile;
@@ -1323,7 +1486,8 @@ async function analyzeWithClaude(base64, mediaType) {
   "produto": "descrição do produto principal (só pra nota fiscal, senão null)",
   "loja": "nome da loja/estabelecimento/empresa",
   "cnpj": "CNPJ se visível, senão null",
-  "chave_acesso": "chave de acesso da NF-e/NFC-e (44 dígitos, só números, sem espaços) se visível, senão null",
+  "chave_acesso": "chave de acesso da NF-e/NFC-e (EXATAMENTE 44 dígitos, só números, sem espaços) se visível, senão null",
+  "linha_digitavel": "linha digitável do boleto (47 ou 48 dígitos, só números, sem espaços ou pontos) se for boleto, senão null",
   "valor": número (apenas o valor, sem R$),
   "data": "YYYY-MM-DD" (data da compra/emissão),
   "vencimento": "YYYY-MM-DD" (apenas pra boletos, senão null),
@@ -1331,7 +1495,22 @@ async function analyzeWithClaude(base64, mediaType) {
   "resumo": "frase curta descrevendo o documento"
 }
 
-Sobre "chave_acesso": notas fiscais eletrônicas brasileiras (NF-e e NFC-e) têm um código de 44 dígitos que costuma aparecer abaixo de um código de barras ou QR Code. Extraia esse código removendo qualquer espaço ou separador, só números. Se não houver, use null.
+Sobre "chave_acesso" — IMPORTANTE:
+- Notas fiscais eletrônicas brasileiras (NF-e e NFC-e) têm um código de EXATAMENTE 44 dígitos numéricos
+- O código aparece geralmente abaixo de um código de barras ou QR Code, ou rotulado como "Chave de acesso" / "Consulte pela Chave"
+- Tem que ter EXATAMENTE 44 DÍGITOS - nem 43, nem 45
+- NÃO inclua CNPJ (14 dígitos), CPF (11 dígitos), nem o número da nota — só a chave de acesso real
+- Se você não tiver certeza absoluta de que extraiu 44 dígitos corretos, retorne null em vez de chutar
+- Não misture números de campos diferentes
+- Se a foto estiver borrada ou parcialmente cortada, prefira retornar null
+
+Sobre "linha_digitavel" (boletos brasileiros) — IMPORTANTE:
+- A linha digitável de um boleto tem 47 dígitos (bancário) ou 48 dígitos (concessionária/arrecadação)
+- Aparece no topo do boleto, dividida em 4 ou 5 blocos separados por espaços ou pontos (exemplo: "23793.39001 60000.123456 71234.567890 1 12345678900000")
+- Extraia APENAS os números (47 ou 48 dígitos), sem espaços, pontos ou hífens
+- Se o documento NÃO é boleto, retorne null
+- Se for boleto mas a linha digitável não estiver legível, retorne null
+- Se a foto estiver borrada, prefira retornar null em vez de chutar
 
 Se não conseguir identificar algum campo, use null. Para "tipo": nota_fiscal é cupom/NF de produtos, recibo é prestação de serviço, boleto é cobrança bancária. Se for foto borrada ou ilegível, marca tipo="outros" e resumo="Documento ilegível".`;
 
@@ -1428,13 +1607,19 @@ function openReviewModal() {
   document.getElementById('reviewValue').value = a.valor || '';
   document.getElementById('reviewDate').value = a.data || new Date().toISOString().split('T')[0];
   document.getElementById('reviewChaveAcesso').value = a.chave_acesso || '';
+  document.getElementById('reviewLinhaDigitavel').value = a.linha_digitavel || '';
 
   // Garantia: só mostra pra nota fiscal, e sugere
   toggleWarrantyField();
   document.getElementById('reviewWarranty').value = a.garantia_sugerida_meses || '';
 
-  // Chave de acesso: só mostra pra nota fiscal
+  // Chave de acesso: só mostra pra nota fiscal + valida visual
   toggleChaveAcessoField();
+  validateChaveAcesso();
+
+  // Linha digitável: só mostra pra boleto + valida visual
+  toggleLinhaDigitavelField();
+  validateLinhaDigitavel();
 
   // Popular dropdown de pastas personalizadas
   populateCustomFolderDropdown();
@@ -1447,6 +1632,9 @@ function openReviewModal() {
   typeSelect.removeEventListener('change', onReviewTypeChange); // remove duplicatas
   typeSelect.addEventListener('change', onReviewTypeChange);
 
+  // Atualiza o indicador de progresso se estamos processando uma fila
+  updateReviewProgress();
+
   openModal('reviewModal');
 }
 
@@ -1454,6 +1642,7 @@ function openReviewModal() {
 function onReviewTypeChange() {
   toggleWarrantyField();
   toggleChaveAcessoField();
+  toggleLinhaDigitavelField();
   toggleCreateFolderHint();
 }
 
@@ -1482,7 +1671,78 @@ function toggleChaveAcessoField() {
   const tipo = document.getElementById('reviewType').value;
   const group = document.getElementById('chaveAcessoGroup');
   if (group) group.style.display = (tipo === 'nota_fiscal') ? 'block' : 'none';
+  // Validar agora pra mostrar/esconder alerta
+  if (group && group.style.display === 'block') validateChaveAcesso();
 }
+
+function toggleLinhaDigitavelField() {
+  const tipo = document.getElementById('reviewType').value;
+  const group = document.getElementById('linhaDigitavelGroup');
+  if (group) group.style.display = (tipo === 'boleto') ? 'block' : 'none';
+  if (group && group.style.display === 'block') validateLinhaDigitavel();
+}
+
+// Mostra alerta visual conforme quantidade de dígitos da linha digitável
+function validateLinhaDigitavel() {
+  const input = document.getElementById('reviewLinhaDigitavel');
+  const status = document.getElementById('linhaDigitavelStatus');
+  if (!input || !status) return;
+
+  const digits = input.value.replace(/\D/g, '');
+  input.style.borderColor = '';
+
+  if (digits.length === 0) {
+    status.style.display = 'none';
+    return;
+  }
+
+  status.style.display = 'block';
+  if (digits.length === 47 || digits.length === 48) {
+    status.style.color = '#2D6B0F';
+    status.innerHTML = `✅ Linha digitável válida (${digits.length} dígitos)`;
+    input.style.borderColor = '#A5D6A7';
+  } else if (digits.length < 47) {
+    status.style.color = '#8B5A0F';
+    status.innerHTML = `⚠️ Faltam dígitos. Esperado: 47 ou 48 (você tem ${digits.length}).`;
+    input.style.borderColor = '#FFD4B8';
+  } else {
+    status.style.color = '#8B1F1F';
+    status.innerHTML = `⚠️ ${digits.length} dígitos. Esperado: 47 ou 48. Confira a foto.`;
+    input.style.borderColor = '#F5C0C0';
+  }
+}
+window.validateLinhaDigitavel = validateLinhaDigitavel;
+
+// Mostra alerta visual conforme quantidade de dígitos da chave
+function validateChaveAcesso() {
+  const input = document.getElementById('reviewChaveAcesso');
+  const status = document.getElementById('chaveAcessoStatus');
+  if (!input || !status) return;
+
+  const digits = input.value.replace(/\D/g, '');
+  input.style.borderColor = '';
+
+  if (digits.length === 0) {
+    status.style.display = 'none';
+    return;
+  }
+
+  status.style.display = 'block';
+  if (digits.length === 44) {
+    status.style.color = '#2D6B0F';
+    status.innerHTML = '✅ Chave válida (44 dígitos)';
+    input.style.borderColor = '#A5D6A7';
+  } else if (digits.length < 44) {
+    status.style.color = '#8B5A0F';
+    status.innerHTML = `⚠️ Faltam ${44 - digits.length} dígito(s). Verifique a foto.`;
+    input.style.borderColor = '#FFD4B8';
+  } else {
+    status.style.color = '#8B1F1F';
+    status.innerHTML = `⚠️ ${digits.length} dígitos (esperado: 44). Confira se não pegou outros números.`;
+    input.style.borderColor = '#F5C0C0';
+  }
+}
+window.validateChaveAcesso = validateChaveAcesso;
 
 // Mostra a sugestão de "criar pasta nova" quando Claude não identificou (tipo=outros)
 function toggleCreateFolderHint() {
@@ -1516,6 +1776,9 @@ async function saveDocument() {
     // Chave de acesso: limpa pra ter só dígitos
     const chaveAcessoRaw = document.getElementById('reviewChaveAcesso').value || '';
     const chaveAcesso = chaveAcessoRaw.replace(/\D/g, '') || null;
+    // Linha digitável (boleto): limpa pra ter só dígitos
+    const linhaDigitavelRaw = document.getElementById('reviewLinhaDigitavel').value || '';
+    const linhaDigitavel = linhaDigitavelRaw.replace(/\D/g, '') || null;
 
     const docData = {
       tipo: tipo,
@@ -1525,6 +1788,7 @@ async function saveDocument() {
       data: dataCompra,
       cnpj: pendingDoc.analysis.cnpj || null,
       chave_acesso: chaveAcesso,
+      linha_digitavel: linhaDigitavel,
       vencimento: pendingDoc.analysis.vencimento || null,
       garantia_meses: garantiaMeses,
       garantia_vence: null,
@@ -1559,9 +1823,30 @@ async function saveDocument() {
     hideLoading();
     closeModal('reviewModal');
     pendingDoc = null;
-    showToast('Documento salvo! ✅', 'success');
+
+    // Mensagem diferente se estiver em fila
+    if (fileQueueTotal > 1) {
+      const restantes = fileQueue.length;
+      if (restantes > 0) {
+        showToast(`✅ Salvo! Próximo de ${fileQueueTotal} (${restantes} restantes)`, 'success');
+      } else {
+        showToast(`✅ Salvo! Último de ${fileQueueTotal} finalizado.`, 'success');
+      }
+    } else {
+      showToast('Documento salvo! ✅', 'success');
+    }
 
     await loadDocuments();
+
+    // Se ainda tem arquivos na fila, processa o próximo
+    if (fileQueue.length > 0) {
+      // Pequeno delay pra a UI respirar
+      setTimeout(() => processNextInQueue(), 400);
+    } else if (fileQueueTotal > 1) {
+      // Fim da fila múltipla
+      fileQueueTotal = 0;
+      fileQueueCurrentIndex = 0;
+    }
   } catch (err) {
     hideLoading();
     console.error(err);
@@ -1662,6 +1947,58 @@ function updateFolderCounts() {
 }
 
 // ========== PASTAS PERSONALIZADAS ==========
+// ========== CONFIGURAÇÃO: DIAS DE AVISO DA GARANTIA ==========
+function getWarningDaysKey() {
+  return 'notafacil_warning_days_' + (currentUser ? currentUser.uid : 'guest');
+}
+
+function getDefaultWarningDays() {
+  const raw = localStorage.getItem(getWarningDaysKey());
+  const n = parseInt(raw);
+  return (n && n > 0 && n <= 365) ? n : 30;
+}
+
+function loadWarningDaysConfig() {
+  const days = getDefaultWarningDays();
+  const select = document.getElementById('cfgWarningDays');
+  const custom = document.getElementById('cfgWarningDaysCustom');
+  if (!select || !custom) return;
+
+  const preset = ['7','15','30','45','60','90'];
+  if (preset.includes(String(days))) {
+    select.value = String(days);
+    custom.style.display = 'none';
+    custom.value = '';
+  } else {
+    select.value = 'custom';
+    custom.style.display = 'block';
+    custom.value = days;
+  }
+}
+
+function saveWarningDays() {
+  const select = document.getElementById('cfgWarningDays');
+  const custom = document.getElementById('cfgWarningDaysCustom');
+  if (!select) return;
+
+  if (select.value === 'custom') {
+    custom.style.display = 'block';
+    const n = parseInt(custom.value);
+    if (n && n > 0 && n <= 365) {
+      localStorage.setItem(getWarningDaysKey(), String(n));
+      showToast(`Aviso configurado: ${n} dias antes`, 'success');
+    }
+  } else {
+    custom.style.display = 'none';
+    const n = parseInt(select.value);
+    if (n && n > 0) {
+      localStorage.setItem(getWarningDaysKey(), String(n));
+      showToast(`Aviso configurado: ${n} dias antes`, 'success');
+    }
+  }
+}
+window.saveWarningDays = saveWarningDays;
+
 function getCustomFoldersKey() {
   return 'notafacil_folders_' + (currentUser ? currentUser.uid : 'guest');
 }
@@ -1919,7 +2256,18 @@ function showDocDetail(id) {
     html += `<div class="detail-row" style="flex-direction:column;align-items:flex-start;">
       <span class="detail-label" style="margin-bottom:4px;">Chave de acesso (NF-e)</span>
       <span class="detail-value" style="text-align:left;max-width:100%;font-family:monospace;font-size:12px;word-break:break-all;line-height:1.4;">${escapeHtml(chaveFmt)}</span>
-      <button class="btn-link" style="margin-top:6px;padding:6px 10px;background:#FFF3E8;" onclick="copyChaveAcesso('${chave}')">📋 Copiar chave</button>
+      <button class="btn-link" style="margin-top:6px;padding:6px 10px;background:#FFF3E8;" onclick="copyToClipboard('${chave}', 'Chave')">📋 Copiar chave</button>
+    </div>`;
+  }
+
+  // Linha digitável (boleto)
+  if (d.linha_digitavel) {
+    const linha = String(d.linha_digitavel).replace(/\D/g, '');
+    const linhaFmt = linha.replace(/(.{4})/g, '$1 ').trim();
+    html += `<div class="detail-row" style="flex-direction:column;align-items:flex-start;background:#FFF9E8;padding:10px;border-radius:8px;margin:6px 0;">
+      <span class="detail-label" style="margin-bottom:4px;color:#8B5A0F;">💳 Linha digitável (boleto)</span>
+      <span class="detail-value" style="text-align:left;max-width:100%;font-family:monospace;font-size:12px;word-break:break-all;line-height:1.4;">${escapeHtml(linhaFmt)}</span>
+      <button class="btn-link" style="margin-top:6px;padding:6px 10px;background:#FF6B35;color:white;" onclick="copyToClipboard('${linha}', 'Linha digitável')">📋 Copiar pra pagar no banco</button>
     </div>`;
   }
 
@@ -1933,12 +2281,18 @@ function showDocDetail(id) {
 
   document.getElementById('detailContent').innerHTML = html;
 
-  // Botão de ação: agendar (se tem garantia)
+  // Botão de ação: agendar
+  // - Pra NOTA FISCAL com garantia: agendar aviso da garantia (X dias antes)
+  // - Pra BOLETO com vencimento: agendar pagamento no dia do vencimento, 10h
   const actionBtn = document.getElementById('detailActionBtn');
-  if (d.garantia_vence) {
+  if (d.tipo === 'nota_fiscal' && d.garantia_vence) {
     actionBtn.style.display = 'flex';
     actionBtn.innerHTML = getCalendarButtonLabel();
     actionBtn.onclick = () => createCalendarEvent(d);
+  } else if (d.tipo === 'boleto' && d.vencimento) {
+    actionBtn.style.display = 'flex';
+    actionBtn.innerHTML = '📅 Agendar pagamento';
+    actionBtn.onclick = () => createBoletoCalendarEvent(d);
   } else {
     actionBtn.style.display = 'none';
   }
@@ -1947,27 +2301,34 @@ function showDocDetail(id) {
 }
 window.showDocDetail = showDocDetail;
 
-// ========== COPIAR CHAVE DE ACESSO ==========
-async function copyChaveAcesso(chave) {
+// ========== COPIAR PRO CLIPBOARD ==========
+async function copyToClipboard(text, label) {
+  label = label || 'Texto';
   try {
-    await navigator.clipboard.writeText(chave);
-    showToast('Chave copiada! 📋', 'success');
+    await navigator.clipboard.writeText(text);
+    showToast(`${label} copiado! 📋`, 'success');
   } catch (e) {
     // Fallback pra navegadores antigos
     try {
       const ta = document.createElement('textarea');
-      ta.value = chave;
+      ta.value = text;
       ta.style.position = 'fixed';
       ta.style.left = '-9999px';
       document.body.appendChild(ta);
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      showToast('Chave copiada! 📋', 'success');
+      showToast(`${label} copiado! 📋`, 'success');
     } catch (err) {
       showToast('Não consegui copiar. Toca e segura no texto.', 'error');
     }
   }
+}
+window.copyToClipboard = copyToClipboard;
+
+// Mantém função antiga por compatibilidade
+async function copyChaveAcesso(chave) {
+  return copyToClipboard(chave, 'Chave');
 }
 window.copyChaveAcesso = copyChaveAcesso;
 
@@ -2106,13 +2467,92 @@ function getCalendarButtonLabel() {
     : '📅 Adicionar ao Google Agenda';
 }
 
+// Doc atualmente sendo agendado (usado pelo modal de schedule)
+let pendingScheduleDoc = null;
+
 function createCalendarEvent(d) {
-  if (isAppleDevice()) {
-    createAppleCalendarEvent(d);
+  // Abre o modal pra escolher quantos dias antes (em vez de criar direto)
+  pendingScheduleDoc = d;
+
+  // Preview do que vai ser agendado
+  const preview = document.getElementById('scheduleProductPreview');
+  if (preview) {
+    preview.innerHTML = `<strong>${escapeHtml(d.produto || d.loja || 'Documento')}</strong><br>` +
+      `<span style="font-size:11px;">Garantia vence: ${formatDate(d.garantia_vence)}</span>`;
+  }
+
+  // Pré-seleciona com o valor padrão dos Ajustes
+  const defaultDays = getDefaultWarningDays();
+  const select = document.getElementById('scheduleDays');
+  const custom = document.getElementById('scheduleDaysCustom');
+  const preset = ['7','15','30','45','60','90'];
+  if (preset.includes(String(defaultDays))) {
+    select.value = String(defaultDays);
+    custom.style.display = 'none';
+    custom.value = '';
   } else {
-    createGoogleCalendarEvent(d);
+    select.value = 'custom';
+    custom.style.display = 'block';
+    custom.value = defaultDays;
+  }
+
+  updateScheduleDateInfo();
+  openModal('scheduleModal');
+}
+
+function onScheduleDaysChange() {
+  const select = document.getElementById('scheduleDays');
+  const custom = document.getElementById('scheduleDaysCustom');
+  custom.style.display = (select.value === 'custom') ? 'block' : 'none';
+  if (select.value === 'custom') custom.focus();
+  updateScheduleDateInfo();
+}
+window.onScheduleDaysChange = onScheduleDaysChange;
+
+function getScheduleDaysValue() {
+  const select = document.getElementById('scheduleDays');
+  if (!select) return 30;
+  if (select.value === 'custom') {
+    const n = parseInt(document.getElementById('scheduleDaysCustom').value);
+    return (n && n > 0 && n <= 365) ? n : 30;
+  }
+  return parseInt(select.value) || 30;
+}
+
+function updateScheduleDateInfo() {
+  if (!pendingScheduleDoc) return;
+  const days = getScheduleDaysValue();
+  const vence = new Date(pendingScheduleDoc.garantia_vence);
+  const aviso = new Date(vence);
+  aviso.setDate(aviso.getDate() - days);
+  const info = document.getElementById('scheduleDateInfo');
+  if (info) {
+    info.innerHTML = `O lembrete será criado para <strong>${formatDate(aviso.toISOString().split('T')[0])}</strong>`;
   }
 }
+
+// Listener pra atualizar a previsão de data quando digitar no campo livre
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id === 'scheduleDaysCustom') {
+    updateScheduleDateInfo();
+  }
+});
+
+function confirmSchedule() {
+  if (!pendingScheduleDoc) return;
+  const days = getScheduleDaysValue();
+
+  closeModal('scheduleModal');
+
+  // Cria o evento conforme o dispositivo
+  if (isAppleDevice()) {
+    createAppleCalendarEvent(pendingScheduleDoc, days);
+  } else {
+    createGoogleCalendarEvent(pendingScheduleDoc, days);
+  }
+  pendingScheduleDoc = null;
+}
+window.confirmSchedule = confirmSchedule;
 
 // Formata data pra padrão iCalendar (YYYYMMDD)
 function formatIcsDate(date) {
@@ -2134,10 +2574,11 @@ function escapeIcs(text) {
 }
 
 // Gera arquivo .ics e abre no app de calendário do iPhone/Mac
-function createAppleCalendarEvent(d) {
+function createAppleCalendarEvent(d, daysAhead) {
+  daysAhead = daysAhead || 30;
   const vence = new Date(d.garantia_vence);
   const aviso = new Date(vence);
-  aviso.setDate(aviso.getDate() - 30);
+  aviso.setDate(aviso.getDate() - daysAhead);
 
   const dtStart = formatIcsDate(aviso);
   // Adiciona 1 dia ao fim porque eventos all-day no .ics têm DTEND exclusivo
@@ -2145,10 +2586,10 @@ function createAppleCalendarEvent(d) {
   fim.setDate(fim.getDate() + 1);
   const dtEnd = formatIcsDate(fim);
 
-  const uid = `notafacil-${d.id || Date.now()}@notafacil.app`;
+  const uid = `notafacil-${d.id || Date.now()}-${daysAhead}@notafacil.app`;
   const dtStamp = new Date().toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
 
-  const title = `⚠️ Garantia vence em 30 dias: ${d.produto || d.loja || 'documento'}`;
+  const title = `⚠️ Garantia vence em ${daysAhead} dias: ${d.produto || d.loja || 'documento'}`;
   const description = [
     `Produto: ${d.produto || '-'}`,
     `Loja: ${d.loja || '-'}`,
@@ -2202,17 +2643,147 @@ function createAppleCalendarEvent(d) {
   showToast('Calendário pronto! Toque no arquivo .ics que abriu pra adicionar.', 'success');
 }
 
-function createGoogleCalendarEvent(d) {
-  // Cria URL do Google Calendar 30 dias antes do vencimento
+function createGoogleCalendarEvent(d, daysAhead) {
+  daysAhead = daysAhead || 30;
+  // Cria URL do Google Calendar X dias antes do vencimento
   const vence = new Date(d.garantia_vence);
   const aviso = new Date(vence);
-  aviso.setDate(aviso.getDate() - 30);
+  aviso.setDate(aviso.getDate() - daysAhead);
 
   const dateStart = aviso.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 8);
   const dateEnd = dateStart;
 
-  const title = `⚠️ Garantia vence em 30 dias: ${d.produto || d.loja}`;
+  const title = `⚠️ Garantia vence em ${daysAhead} dias: ${d.produto || d.loja}`;
   const details = `Produto: ${d.produto || ''}\nLoja: ${d.loja || ''}\nValor: R$ ${formatMoney(d.valor || 0)}\nData da compra: ${formatDate(d.data || '')}\nGarantia vence em: ${formatDate(d.garantia_vence)}\n\nNota fiscal anexa: ${d.photoUrl || ''}`;
+
+  const url = `https://calendar.google.com/calendar/r/eventedit?` +
+    `text=${encodeURIComponent(title)}` +
+    `&dates=${dateStart}/${dateEnd}` +
+    `&details=${encodeURIComponent(details)}` +
+    `&sf=true&output=xml`;
+
+  window.open(url, '_blank');
+}
+
+// ========== AGENDAMENTO DE BOLETO ==========
+// Cria evento no DIA do vencimento, às 10:00 da manhã, com a linha digitável
+function createBoletoCalendarEvent(d) {
+  if (isAppleDevice()) {
+    createAppleBoletoEvent(d);
+  } else {
+    createGoogleBoletoEvent(d);
+  }
+}
+window.createBoletoCalendarEvent = createBoletoCalendarEvent;
+
+// Formata para padrão iCalendar com hora: YYYYMMDDTHHMMSS
+function formatIcsDateTime(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const h = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${y}${m}${day}T${h}${min}00`;
+}
+
+function createAppleBoletoEvent(d) {
+  // Cria data 10:00 LOCAL do dia do vencimento
+  const vence = new Date(d.vencimento + 'T10:00:00');
+  // Evento dura 30 min
+  const fim = new Date(vence);
+  fim.setMinutes(fim.getMinutes() + 30);
+
+  const dtStart = formatIcsDateTime(vence);
+  const dtEnd = formatIcsDateTime(fim);
+  const dtStamp = new Date().toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
+  const uid = `notafacil-boleto-${d.id || Date.now()}@notafacil.app`;
+
+  const title = `💳 Pagar boleto: ${d.loja || d.produto || 'documento'}`;
+
+  // Monta descrição com a linha digitável bem visível
+  const descLines = [
+    `Valor: R$ ${formatMoney(d.valor || 0)}`,
+    `Loja/Emissor: ${d.loja || '-'}`,
+    `Vence em: ${formatDate(d.vencimento)}`,
+    ''
+  ];
+  if (d.linha_digitavel) {
+    descLines.push('LINHA DIGITÁVEL (copie e cole no banco):');
+    descLines.push(d.linha_digitavel);
+    descLines.push('');
+  }
+  descLines.push(`Boleto anexo: ${d.photoUrl || ''}`);
+  descLines.push('');
+  descLines.push('Criado pelo NotaFácil');
+  const description = descLines.join('\n');
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//NotaFacil//pt-BR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${dtStamp}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${escapeIcs(title)}`,
+    `DESCRIPTION:${escapeIcs(description)}`,
+    // Aviso na hora do evento (10:00)
+    'BEGIN:VALARM',
+    'TRIGGER:PT0M',
+    'ACTION:DISPLAY',
+    `DESCRIPTION:${escapeIcs(title)}`,
+    'END:VALARM',
+    // Aviso adicional 1h antes (9:00)
+    'BEGIN:VALARM',
+    'TRIGGER:-PT1H',
+    'ACTION:DISPLAY',
+    `DESCRIPTION:${escapeIcs('Boleto vence hoje às 10h: ' + (d.loja || d.produto || ''))}`,
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ];
+  const ics = lines.join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `notafacil-boleto-${(d.loja || 'pagamento').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30)}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  showToast('Boleto agendado pras 10h do vencimento! Toque no arquivo .ics que abriu.', 'success');
+}
+
+function createGoogleBoletoEvent(d) {
+  // 10:00 no dia do vencimento
+  const vence = new Date(d.vencimento + 'T10:00:00');
+  const fim = new Date(vence);
+  fim.setMinutes(fim.getMinutes() + 30);
+
+  // Formato Google: YYYYMMDDTHHMMSS (sem zona, é local)
+  const dateStart = formatIcsDateTime(vence);
+  const dateEnd = formatIcsDateTime(fim);
+
+  const title = `💳 Pagar boleto: ${d.loja || d.produto || 'documento'}`;
+  const detailsLines = [
+    `Valor: R$ ${formatMoney(d.valor || 0)}`,
+    `Loja/Emissor: ${d.loja || ''}`,
+    `Vence em: ${formatDate(d.vencimento)}`,
+    ''
+  ];
+  if (d.linha_digitavel) {
+    detailsLines.push('LINHA DIGITÁVEL (copie e cole no banco):');
+    detailsLines.push(d.linha_digitavel);
+    detailsLines.push('');
+  }
+  detailsLines.push(`Boleto anexo: ${d.photoUrl || ''}`);
+  const details = detailsLines.join('\n');
 
   const url = `https://calendar.google.com/calendar/r/eventedit?` +
     `text=${encodeURIComponent(title)}` +
