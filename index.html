@@ -274,50 +274,45 @@
   .btn-link:hover { background: #FFF3E8; }
 
   /* PASTA CUSTOMIZADA — ação de excluir */
-  .folder-custom { position: relative; }
+  .folder-custom { position: relative; padding-right: 80px; }
   .folder-custom-delete {
     position: absolute;
-    right: 36px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    width: 30px;
-    height: 30px;
-    background: transparent;
+    width: 32px;
+    height: 32px;
+    background: rgba(252, 229, 229, 0.8);
     border: none;
-    color: #BBB;
-    font-size: 18px;
-    cursor: pointer;
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  .folder-custom-edit {
-    position: absolute;
-    right: 68px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 30px;
-    height: 30px;
-    background: transparent;
-    border: none;
-    color: #888;
+    color: #8B1F1F;
     font-size: 16px;
     cursor: pointer;
     border-radius: 50%;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 2;
   }
-  .folder-custom:hover .folder-custom-delete,
-  .folder-custom:hover .folder-custom-edit { display: flex; }
-  .folder-custom-delete:hover { background: #FCE5E5; color: #8B1F1F; }
-  .folder-custom-edit:hover { background: #E3F2FD; color: #1565C0; }
-  /* Em mobile (sem hover), sempre visíveis */
-  @media (hover: none) {
-    .folder-custom-delete,
-    .folder-custom-edit { display: flex; opacity: 0.6; }
+  .folder-custom-edit {
+    position: absolute;
+    right: 44px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(227, 242, 253, 0.8);
+    border: none;
+    color: #1565C0;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
   }
+  .folder-custom-delete:active { background: #FCE5E5; }
+  .folder-custom-edit:active { background: #BBDEFB; }
 
   /* DOCUMENT CARD */
   .doc-card {
@@ -374,6 +369,7 @@
   .folder-name { font-size: 15px; font-weight: 600; }
   .folder-count { font-size: 12px; color: #888; }
   .folder-arrow { color: #CCC; font-size: 20px; }
+  .folder-custom .folder-arrow { display: none; }
 
   /* STATS */
   .stats {
@@ -623,6 +619,16 @@
     overflow-wrap: anywhere;
   }
   .detail-row:last-child { border-bottom: none; }
+  .detail-row-editable {
+    transition: background 0.15s;
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 6px;
+  }
+  .detail-row-editable:active {
+    background: #FFF3E8;
+  }
   .detail-label {
     color: #888;
     flex-shrink: 0;
@@ -663,7 +669,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.25 · 11/05/2026
+    Versão 1.0.26 · 11/05/2026
   </div>
 </div>
 
@@ -673,7 +679,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.25</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.26</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -863,10 +869,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.25</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.26</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.25 - modal de ajuda pra importar de nuvens iOS)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.26 - editar campos inline + corrigido botão de editar pasta no iPhone)</span>
           </p>
         </div>
       </div>
@@ -1120,6 +1126,23 @@
 
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn" onclick="closeModal('cloudHelpModal');document.getElementById('fileInput').click()" style="width:100%;">📎 Abrir seletor de arquivos agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR CAMPO ÚNICO DO DOCUMENTO (inline) -->
+<div id="editFieldModal" class="modal-overlay" style="z-index:280;" onclick="if(event.target===this)closeModal('editFieldModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editFieldModal')">×</button>
+    <div class="modal-title" id="editFieldModalTitle">✏️ Editar campo</div>
+
+    <div id="editFieldContainer">
+      <!-- preenchido por JS conforme o campo -->
+    </div>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeModal('editFieldModal')" style="flex:1;">Cancelar</button>
+      <button class="btn" onclick="saveEditedField()" style="flex:1;">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -3424,13 +3447,72 @@ function showDocDetail(id) {
   // Renderiza foto ou placeholder de PDF conforme o tipo de arquivo
   renderDetailPhoto(d);
 
-  let html = `<div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${TIPO_LABELS[d.tipo]||d.tipo}</span></div>`;
-  if (d.loja) html += `<div class="detail-row"><span class="detail-label">Loja</span><span class="detail-value">${escapeHtml(d.loja)}</span></div>`;
-  if (d.cnpj) html += `<div class="detail-row"><span class="detail-label">CNPJ</span><span class="detail-value">${escapeHtml(d.cnpj)}</span></div>`;
-  if (d.valor) html += `<div class="detail-row"><span class="detail-label">Valor</span><span class="detail-value">R$ ${formatMoney(d.valor)}</span></div>`;
-  if (d.data) html += `<div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${formatDate(d.data)}</span></div>`;
-  if (d.vencimento) html += `<div class="detail-row"><span class="detail-label">Vencimento</span><span class="detail-value">${formatDate(d.vencimento)}</span></div>`;
-  if (d.garantia_meses) html += `<div class="detail-row"><span class="detail-label">Garantia</span><span class="detail-value">${d.garantia_meses} meses</span></div>`;
+  // Helper: cria uma linha de detalhe CLICÁVEL pra edição inline
+  // field: nome do campo no Firestore (ex: 'loja')
+  // label: rótulo visível (ex: 'Loja')
+  // value: valor formatado pra exibição
+  // type: tipo do campo ('text', 'number', 'date', 'select', 'money')
+  // options: pra select - lista [{value, label}]
+  const editRow = (field, label, value, type, options) => {
+    const safeValue = value === null || value === undefined || value === '' ? '<span style="color:#AAA;">— vazio —</span>' : escapeHtml(String(value));
+    const optsJson = options ? `data-options='${JSON.stringify(options).replace(/'/g, '&#39;')}'` : '';
+    return `<div class="detail-row detail-row-editable" data-field="${field}" data-label="${escapeHtml(label)}" data-type="${type || 'text'}" ${optsJson} onclick="editDocField(this)" style="cursor:pointer;">
+      <span class="detail-label">${escapeHtml(label)}</span>
+      <span class="detail-value">${safeValue} <span style="color:#FF6B35;font-size:13px;margin-left:4px;">✏️</span></span>
+    </div>`;
+  };
+
+  let html = '';
+
+  // Dica: clique em qualquer linha pra editar
+  html += `<p style="font-size:11px;color:#888;margin:-4px 0 10px;line-height:1.4;text-align:center;background:#FFF3E8;padding:6px 10px;border-radius:6px;border:1px dashed #FFD4B8;">
+    💡 Toque em qualquer linha com <span style="color:#FF6B35;">✏️</span> pra editar
+  </p>`;
+
+  // TIPO (select)
+  html += editRow('tipo', 'Tipo', TIPO_LABELS[d.tipo] || d.tipo, 'select', [
+    { value: 'nota_fiscal', label: '🧾 Nota Fiscal' },
+    { value: 'recibo', label: '📄 Recibo' },
+    { value: 'boleto', label: '🏷️ Boleto' },
+    { value: 'outros', label: '📁 Outros' }
+  ]);
+
+  // PRODUTO (só pra nota fiscal)
+  if (d.tipo === 'nota_fiscal' || d.produto) {
+    html += editRow('produto', 'Produto', d.produto, 'text');
+  }
+
+  // LOJA
+  html += editRow('loja', 'Loja', d.loja, 'text');
+
+  // CNPJ
+  html += editRow('cnpj', 'CNPJ', d.cnpj, 'text');
+
+  // VALOR (money)
+  html += editRow('valor', 'Valor', d.valor ? 'R$ ' + formatMoney(d.valor) : null, 'money');
+
+  // DATA
+  html += editRow('data', 'Data', d.data ? formatDate(d.data) : null, 'date');
+
+  // VENCIMENTO (boletos)
+  if (d.tipo === 'boleto' || d.vencimento) {
+    html += editRow('vencimento', 'Vencimento', d.vencimento ? formatDate(d.vencimento) : null, 'date');
+  }
+
+  // GARANTIA (meses) — só nota fiscal
+  if (d.tipo === 'nota_fiscal') {
+    html += editRow('garantia_meses', 'Garantia (meses)', d.garantia_meses, 'select', [
+      { value: '', label: 'Sem garantia' },
+      { value: '3', label: '3 meses' },
+      { value: '6', label: '6 meses' },
+      { value: '12', label: '12 meses' },
+      { value: '18', label: '18 meses' },
+      { value: '24', label: '24 meses' },
+      { value: '36', label: '36 meses' }
+    ]);
+  }
+
+  // GARANTIA VENCE (calculado, não editável diretamente, mas mostro)
   if (d.garantia_vence) {
     const days = daysUntil(d.garantia_vence);
     const cor = days < 0 ? '#8B1F1F' : (days <= 30 ? '#8B5A0F' : '#2D6B0F');
@@ -3443,7 +3525,7 @@ function showDocDetail(id) {
     // Formata como blocos de 4 dígitos pra ficar legível: XXXX XXXX XXXX ...
     const chaveFmt = chave.replace(/(.{4})/g, '$1 ').trim();
     html += `<div class="detail-row" style="flex-direction:column;align-items:flex-start;">
-      <span class="detail-label" style="margin-bottom:4px;">Chave de acesso (NF-e)</span>
+      <span class="detail-label" style="margin-bottom:4px;">Chave de acesso (NF-e) <span style="color:#FF6B35;font-size:13px;cursor:pointer;" onclick="editDocFieldDirect('chave_acesso','Chave de acesso','${chave}','text')">✏️</span></span>
       <span class="detail-value" style="text-align:left;max-width:100%;font-family:monospace;font-size:12px;word-break:break-all;line-height:1.4;">${escapeHtml(chaveFmt)}</span>
       <button class="btn-link" style="margin-top:6px;padding:6px 10px;background:#FFF3E8;" onclick="copyToClipboard('${chave}', 'Chave')">📋 Copiar chave</button>
     </div>`;
@@ -3454,7 +3536,7 @@ function showDocDetail(id) {
     const linha = String(d.linha_digitavel).replace(/\D/g, '');
     const linhaFmt = linha.replace(/(.{4})/g, '$1 ').trim();
     html += `<div class="detail-row" style="flex-direction:column;align-items:flex-start;background:#FFF9E8;padding:10px;border-radius:8px;margin:6px 0;">
-      <span class="detail-label" style="margin-bottom:4px;color:#8B5A0F;">💳 Linha digitável (boleto)</span>
+      <span class="detail-label" style="margin-bottom:4px;color:#8B5A0F;">💳 Linha digitável (boleto) <span style="color:#FF6B35;font-size:13px;cursor:pointer;margin-left:4px;" onclick="editDocFieldDirect('linha_digitavel','Linha digitável','${linha}','text')">✏️</span></span>
       <span class="detail-value" style="text-align:left;max-width:100%;font-family:monospace;font-size:12px;word-break:break-all;line-height:1.4;">${escapeHtml(linhaFmt)}</span>
       <button class="btn-link" style="margin-top:6px;padding:6px 10px;background:#FF6B35;color:white;" onclick="copyToClipboard('${linha}', 'Linha digitável')">📋 Copiar pra pagar no banco</button>
     </div>`;
@@ -3563,6 +3645,170 @@ function showDocDetail(id) {
   openModal('detailModal');
 }
 window.showDocDetail = showDocDetail;
+
+// ========== EDIÇÃO INLINE DE CAMPOS DO DOCUMENTO ==========
+// Estado: campo sendo editado no momento
+let editingField = null;
+
+// Chamado quando o usuário toca em uma linha clicável do detalhe
+function editDocField(rowElement) {
+  const field = rowElement.getAttribute('data-field');
+  const label = rowElement.getAttribute('data-label');
+  const type = rowElement.getAttribute('data-type') || 'text';
+  const optionsStr = rowElement.getAttribute('data-options');
+  const options = optionsStr ? JSON.parse(optionsStr) : null;
+
+  if (!currentDetailDoc) return;
+  const currentValue = currentDetailDoc[field];
+
+  openEditFieldModal(field, label, currentValue, type, options);
+}
+window.editDocField = editDocField;
+
+// Versão direta (sem precisar do elemento HTML — usado pra chave de acesso, linha digitável, etc.)
+function editDocFieldDirect(field, label, currentValue, type, optionsJson) {
+  const options = optionsJson ? JSON.parse(optionsJson) : null;
+  openEditFieldModal(field, label, currentValue, type, options);
+}
+window.editDocFieldDirect = editDocFieldDirect;
+
+function openEditFieldModal(field, label, currentValue, type, options) {
+  editingField = { field, label, type, options };
+
+  document.getElementById('editFieldModalTitle').textContent = `✏️ Editar: ${label}`;
+  const container = document.getElementById('editFieldContainer');
+
+  // Valor atual normalizado pra exibição no input
+  let displayValue = '';
+  if (currentValue !== null && currentValue !== undefined) {
+    displayValue = String(currentValue);
+  }
+
+  let html = '';
+
+  if (type === 'select' && options) {
+    html += `<div class="form-group">
+      <label class="form-label">${escapeHtml(label)}</label>
+      <select id="editFieldInput" class="form-select">
+        ${options.map(opt => `<option value="${escapeHtml(String(opt.value))}" ${String(opt.value) === displayValue ? 'selected' : ''}>${escapeHtml(opt.label)}</option>`).join('')}
+      </select>
+    </div>`;
+  } else if (type === 'date') {
+    // Input nativo de data (formato ISO YYYY-MM-DD)
+    html += `<div class="form-group">
+      <label class="form-label">${escapeHtml(label)}</label>
+      <input type="date" id="editFieldInput" class="form-input" value="${escapeHtml(displayValue)}">
+    </div>`;
+  } else if (type === 'money' || type === 'number') {
+    html += `<div class="form-group">
+      <label class="form-label">${escapeHtml(label)} ${type === 'money' ? '(R$)' : ''}</label>
+      <input type="number" id="editFieldInput" class="form-input" step="${type === 'money' ? '0.01' : '1'}" value="${escapeHtml(displayValue)}" placeholder="0">
+    </div>`;
+  } else {
+    // text (default)
+    html += `<div class="form-group">
+      <label class="form-label">${escapeHtml(label)}</label>
+      <input type="text" id="editFieldInput" class="form-input" value="${escapeHtml(displayValue)}" placeholder="(vazio)">
+    </div>`;
+  }
+
+  // Dica especial pra campos com validação conhecida
+  if (field === 'chave_acesso') {
+    html += `<p style="font-size:11px;color:#888;margin-top:-8px;line-height:1.4;">A chave NF-e/NFC-e tem exatamente 44 dígitos. Pode digitar com ou sem espaços.</p>`;
+  } else if (field === 'linha_digitavel') {
+    html += `<p style="font-size:11px;color:#888;margin-top:-8px;line-height:1.4;">A linha digitável tem 47 dígitos (boleto bancário) ou 48 (concessionária).</p>`;
+  }
+
+  container.innerHTML = html;
+  openModal('editFieldModal');
+  setTimeout(() => {
+    const input = document.getElementById('editFieldInput');
+    if (input) input.focus();
+  }, 100);
+}
+
+async function saveEditedField() {
+  if (!editingField || !currentDetailDoc) return;
+  const { field, type } = editingField;
+  const input = document.getElementById('editFieldInput');
+  if (!input) return;
+
+  let value = input.value;
+
+  // Conversões conforme o tipo
+  if (type === 'money' || type === 'number') {
+    value = value === '' ? null : parseFloat(value);
+    if (value !== null && isNaN(value)) {
+      showToast('Valor inválido', 'error');
+      return;
+    }
+  } else if (type === 'select') {
+    // garantia_meses: vazio = null, número = int
+    if (field === 'garantia_meses') {
+      value = value === '' ? null : parseInt(value, 10);
+    }
+  } else if (type === 'text') {
+    value = value.trim();
+    // Limpa formatação de chave_acesso e linha_digitavel (só dígitos)
+    if (field === 'chave_acesso' || field === 'linha_digitavel') {
+      value = value.replace(/\D/g, '');
+    }
+    if (value === '') value = null;
+  } else if (type === 'date') {
+    value = value || null;
+  }
+
+  try {
+    showLoading('Salvando...');
+    const { doc, updateDoc } = window.fbHelpers;
+    const docRef = doc(window.fbDb, 'documentos', currentDetailDoc.id);
+
+    const updates = { [field]: value };
+
+    // Recalcular garantia_vence se mudou tipo ou garantia_meses ou data
+    if ((field === 'garantia_meses' || field === 'data' || field === 'tipo') && currentDetailDoc.tipo === 'nota_fiscal') {
+      const novoTipo = field === 'tipo' ? value : currentDetailDoc.tipo;
+      const novaData = field === 'data' ? value : currentDetailDoc.data;
+      const novaGarantia = field === 'garantia_meses' ? value : currentDetailDoc.garantia_meses;
+
+      if (novoTipo === 'nota_fiscal' && novaData && novaGarantia) {
+        const venceDate = new Date(novaData);
+        venceDate.setMonth(venceDate.getMonth() + novaGarantia);
+        updates.garantia_vence = venceDate.toISOString().split('T')[0];
+      } else {
+        updates.garantia_vence = null;
+      }
+    }
+
+    // Se mudou tipo pra não ser nota fiscal, limpa garantia
+    if (field === 'tipo' && value !== 'nota_fiscal') {
+      updates.garantia_meses = null;
+      updates.garantia_vence = null;
+    }
+
+    await updateDoc(docRef, updates);
+
+    // Atualiza local
+    Object.assign(currentDetailDoc, updates);
+    // Encontra também na lista currentDocs (referência diferente)
+    const docInList = currentDocs.find(x => x.id === currentDetailDoc.id);
+    if (docInList) Object.assign(docInList, updates);
+
+    hideLoading();
+    closeModal('editFieldModal');
+    showToast(`${editingField.label} atualizado ✅`, 'success');
+
+    // Re-renderiza o detalhe
+    showDocDetail(currentDetailDoc.id);
+
+    editingField = null;
+  } catch (err) {
+    hideLoading();
+    console.error(err);
+    showToast('Erro ao salvar: ' + err.message, 'error');
+  }
+}
+window.saveEditedField = saveEditedField;
 
 // ========== COPIAR PRO CLIPBOARD ==========
 // Copia PIX (BR Code) lendo de data-attribute em base64 (resolve bug com caracteres especiais)
