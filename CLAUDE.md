@@ -2,7 +2,7 @@
 
 > Sistema web de organização automática de notas fiscais, recibos, boletos e garantias com IA (Claude) e Firebase.
 
-**Versão atual:** v1.0.25
+**Versão atual:** v1.0.26
 **Última atualização:** 11/05/2026
 **Construído por:** Ivan Silveira (com assistência do Claude da Anthropic)
 
@@ -209,6 +209,7 @@ Se mudar o `service-worker.js`, atualizar também a constante `CACHE_NAME` pra f
 | v1.0.23 | **Layout dos campos extras corrigido**: valores longos (URLs, códigos PIX BR Code, linhas digitáveis) não vazam mais da tela. Detecção automática de "valor longo" (>30 chars ou URL ou código sem espaços) com layout vertical empilhado e fonte monoespaçada pra códigos. CSS global das detail-rows reforçado com `word-break:break-word` e `overflow-wrap:anywhere` |
 | v1.0.24 | **Datas em formato brasileiro**: campos extras com data ISO (YYYY-MM-DD) agora são exibidos como DD/MM/AAAA automaticamente. Função `formatValueSmart()` detecta data ISO e converte. Função inversa `parseValueSmart()` converte DD/MM/AAAA de volta pra ISO quando o usuário edita e salva. Aplicado nos 3 modais (novo doc, re-análise, edição) e no detalhe |
 | v1.0.25 | **Modal de ajuda pra importar da nuvem**: o iOS Safari não mostra providers de nuvem em PWAs (limitação da Apple). Substituído o botão "Importar da nuvem" por "Como importar do Drive / OneDrive / iCloud" que abre modal com instruções passo a passo: (1) configurar providers no app Arquivos, (2) atalho via Compartilhar, (3) botão "tentar abrir app Arquivos" via esquema URL `shareddocuments://` |
+| v1.0.26 | **Edição inline de campos** no detalhe do documento. Cada linha agora é clicável (com ícone ✏️) e abre um modal de edição com input apropriado (text/number/date/select). Funciona pra: tipo, produto, loja, CNPJ, valor, data, vencimento, garantia, chave de acesso, linha digitável. Recalcula garantia_vence automaticamente se mudar data/tipo/garantia. **Bug do botão ✏️ editar pasta no iPhone corrigido**: agora os botões editar/excluir ficam sempre visíveis (não dependem de hover, que não existe no touch) |
 
 ---
 
