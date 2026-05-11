@@ -193,6 +193,108 @@
     padding: 0 4px;
   }
 
+  /* BUSCA */
+  .search-box {
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  .search-input {
+    width: 100%;
+    padding: 11px 38px 11px 36px;
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+  }
+  .search-input:focus {
+    border-color: #FF6B35;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  }
+  .search-clear {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    background: #E5E5E5;
+    border: none;
+    border-radius: 50%;
+    color: #555;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .search-clear:hover { background: #D5D5D5; }
+  .search-no-results {
+    text-align: center;
+    color: #888;
+    padding: 32px 16px;
+    font-size: 14px;
+    background: white;
+    border: 1px dashed #E5E5E5;
+    border-radius: 12px;
+  }
+  .search-highlight {
+    background: #FFF3B8;
+    color: #5C4500;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 600;
+  }
+
+  /* BOTÃO LINK (texto azul, sem fundo) */
+  .btn-link {
+    background: none;
+    border: none;
+    color: #FF6B35;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .btn-link:hover { background: #FFF3E8; }
+
+  /* PASTA CUSTOMIZADA — ação de excluir */
+  .folder-custom { position: relative; }
+  .folder-custom-delete {
+    position: absolute;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: none;
+    color: #BBB;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .folder-custom:hover .folder-custom-delete { display: flex; }
+  .folder-custom-delete:hover { background: #FCE5E5; color: #8B1F1F; }
+
   /* DOCUMENT CARD */
   .doc-card {
     background: white;
@@ -386,6 +488,62 @@
     background: #F5F5F5;
     border-radius: 8px;
     margin-bottom: 14px;
+    cursor: zoom-in;
+    transition: opacity 0.15s;
+  }
+  .detail-photo:active { opacity: 0.7; }
+
+  /* LIGHTBOX - VISUALIZAR FOTO EM TELA CHEIA COM ZOOM */
+  .lightbox {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 99999;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .lightbox.active { display: flex; align-items: center; justify-content: center; }
+  .lightbox-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.2s ease-out;
+    transform-origin: center center;
+    user-select: none;
+    -webkit-user-drag: none;
+    will-change: transform;
+  }
+  .lightbox-close {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+  }
+  .lightbox-hint {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.7);
+    font-size: 12px;
+    background: rgba(0,0,0,0.4);
+    padding: 6px 12px;
+    border-radius: 16px;
+    pointer-events: none;
+    z-index: 100000;
   }
   .detail-row {
     display: flex;
@@ -424,7 +582,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.5 · 10/05/2026
+    Versão 1.0.7 · 10/05/2026
   </div>
 </div>
 
@@ -434,7 +592,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.5</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.7</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -470,13 +628,30 @@
 
     <!-- TELA: PASTAS -->
     <div id="screen-folders" class="screen">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar em loja, valor, tipo..." oninput="handleSearch(this.value)">
+        <button id="searchClear" class="search-clear" onclick="clearSearch()" style="display:none;">×</button>
+      </div>
+
+      <!-- RESULTADOS DA BUSCA (aparece quando há texto na busca) -->
+      <div id="searchResults" style="display:none;">
+        <div class="section-label" id="searchResultsLabel">Resultados</div>
+        <div id="searchResultsList"></div>
+      </div>
+
+      <!-- VISÃO NORMAL (some quando há busca) -->
+      <div id="foldersView">
       <div class="stats" id="statsRow">
         <div class="stat"><div class="stat-num" id="statNotas">0</div><div class="stat-lbl">Notas</div></div>
         <div class="stat"><div class="stat-num" id="statRecibos">0</div><div class="stat-lbl">Recibos</div></div>
         <div class="stat"><div class="stat-num" id="statBoletos">0</div><div class="stat-lbl">Boletos</div></div>
       </div>
 
-      <div class="section-label">Pastas</div>
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Pastas</span>
+        <button class="btn-link" onclick="openCreateFolderModal()">+ Nova pasta</button>
+      </div>
       <div class="folder" onclick="openFolder('nota_fiscal')">
         <span class="folder-icon">🧾</span>
         <div class="folder-info">
@@ -508,6 +683,10 @@
           <div class="folder-count" id="countOutros">0 documentos</div>
         </div>
         <span class="folder-arrow">›</span>
+      </div>
+
+      <!-- Pastas personalizadas (criadas pelo usuário) -->
+      <div id="customFoldersList"></div>
       </div>
     </div>
 
@@ -560,10 +739,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.5</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.7</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.5 - agora é instalável como app)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.7 - recebe arquivos compartilhados de outros apps)</span>
           </p>
         </div>
       </div>
@@ -645,6 +824,14 @@
       </select>
     </div>
 
+    <div class="form-group">
+      <label class="form-label">Pasta personalizada (opcional)</label>
+      <select id="reviewCustomFolder" class="form-select">
+        <option value="">— Nenhuma —</option>
+      </select>
+      <p style="font-size:11px;color:#888;margin-top:4px;">Categoriza além do tipo. Crie novas pastas em "Pastas".</p>
+    </div>
+
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn btn-secondary" onclick="closeModal('reviewModal')">Cancelar</button>
       <button class="btn" onclick="saveDocument()">💾 Salvar</button>
@@ -657,7 +844,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal('detailModal')">×</button>
     <div class="modal-title" id="detailTitle">Documento</div>
-    <img id="detailPhoto" class="detail-photo" alt="">
+    <img id="detailPhoto" class="detail-photo" alt="" onclick="openLightbox(this.src)">
     <div id="detailContent"></div>
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn btn-secondary" onclick="deleteCurrentDoc()" style="background:#FCE5E5;color:#8B1F1F;border-color:#F5C0C0;">🗑️ Excluir</button>
@@ -670,6 +857,38 @@
 <div id="loadingOverlay" class="loading-overlay">
   <div class="spinner"></div>
   <div class="loading-text" id="loadingText">Processando...</div>
+</div>
+
+<!-- MODAL: CRIAR PASTA PERSONALIZADA -->
+<div id="createFolderModal" class="modal-overlay" onclick="if(event.target===this)closeModal('createFolderModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('createFolderModal')">×</button>
+    <div class="modal-title">📁 Nova pasta</div>
+    <p style="color:#666;font-size:13px;margin-bottom:14px;">Crie uma pasta personalizada (ex: Eletrodomésticos, Carro, Pousada).</p>
+
+    <div class="form-group">
+      <label class="form-label">Nome da pasta</label>
+      <input type="text" id="newFolderName" class="form-input" placeholder="Ex: Eletrodomésticos" maxlength="30">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Ícone (emoji)</label>
+      <input type="text" id="newFolderIcon" class="form-input" placeholder="📦" maxlength="3" value="📦">
+      <p style="font-size:11px;color:#888;margin-top:4px;">Sugestões: 📦 🚗 🏠 💡 🛋️ 👕 🏥 🎓 🍔 ⚙️</p>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeModal('createFolderModal')">Cancelar</button>
+      <button class="btn" onclick="saveNewFolder()">💾 Criar pasta</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX (zoom da foto em tela cheia) -->
+<div id="photoLightbox" class="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img id="lightboxImg" class="lightbox-img" alt="">
+  <div class="lightbox-hint" id="lightboxHint">Pinça pra dar zoom · 2 toques pra ampliar · arraste pra mover</div>
 </div>
 
 <!-- TOAST -->
@@ -703,6 +922,8 @@
   const db = getFirestore(app);
   const storage = getStorage(app);
   const provider = new GoogleAuthProvider();
+  // Força o Google a sempre perguntar qual conta usar, mesmo se só tiver uma logada
+  provider.setCustomParameters({ prompt: 'select_account' });
 
   // expor globalmente
   window.fbAuth = auth;
@@ -756,6 +977,9 @@ window.addEventListener('firebase-ready', () => {
         <span style="color:#888;font-size:13px;">${user.email}</span>
       `;
       loadDocuments();
+      initLightboxGestures();
+      // Verifica se o app foi aberto via compartilhamento de outro app
+      setTimeout(() => checkForSharedFile(), 500);
     } else {
       currentUser = null;
       document.getElementById('loginScreen').style.display = 'flex';
@@ -779,8 +1003,34 @@ window.loginGoogle = loginGoogle;
 async function logout() {
   try {
     const { signOut } = window.fbHelpers;
+
+    // 1) Faz signOut do Firebase
     await signOut(window.fbAuth);
+
+    // 2) Limpa dados locais do app (mantém só os essenciais)
+    try {
+      // Limpa localStorage do app
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('claudeKey_') || key.startsWith('notafacil_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      // Limpa sessionStorage
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn('Limpeza local falhou:', e);
+    }
+
+    // 3) Limpa estado em memória
+    currentUser = null;
+    currentDocs = [];
+    pendingDoc = null;
+    currentDetailDoc = null;
+    currentFolderType = null;
+
+    showToast('Você saiu. Pode entrar com outra conta agora.', 'success');
   } catch (err) {
+    console.error('Logout error:', err);
     showToast('Erro ao sair', 'error');
   }
 }
@@ -823,6 +1073,17 @@ async function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
   event.target.value = ''; // reset input
+  await processFile(file);
+}
+window.handleFileSelect = handleFileSelect;
+
+// Processa um arquivo (vem de upload, câmera ou compartilhamento de outro app)
+async function processFile(file) {
+  if (!file) return;
+  if (!currentUser) {
+    showToast('Faz login primeiro pra enviar documentos', 'error');
+    return;
+  }
 
   try {
     showLoading('Preparando o documento...');
@@ -861,7 +1122,7 @@ async function handleFileSelect(event) {
     // Abrir modal de revisão
     pendingDoc = {
       file: processedFile,
-      originalName: file.name,
+      originalName: file.name || 'documento',
       base64: base64,
       mediaType: mediaType,
       analysis: analysis,
@@ -876,7 +1137,50 @@ async function handleFileSelect(event) {
     showToast('Erro: ' + (err.message || 'Algo deu errado'), 'error');
   }
 }
-window.handleFileSelect = handleFileSelect;
+window.processFile = processFile;
+
+// ========== RECEBER ARQUIVO COMPARTILHADO DE OUTRO APP ==========
+// Quando o usuário compartilha uma foto/PDF de outro app (WhatsApp, Fotos, etc)
+// e escolhe o NotaFácil, o Service Worker intercepta e nos avisa.
+async function checkForSharedFile() {
+  // Detecta a URL "?shared=1" que o service worker setou após receber arquivo
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has('shared')) return;
+
+  // Limpa o parâmetro pra não reprocessar se recarregar
+  url.searchParams.delete('shared');
+  window.history.replaceState({}, '', url.toString());
+
+  // Pede os arquivos compartilhados pro service worker
+  if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+    console.warn('Service worker não está ativo, não dá pra receber compartilhamento');
+    return;
+  }
+
+  try {
+    const channel = new MessageChannel();
+    const responsePromise = new Promise((resolve) => {
+      channel.port1.onmessage = (e) => resolve(e.data);
+      setTimeout(() => resolve(null), 3000); // timeout 3s
+    });
+
+    navigator.serviceWorker.controller.postMessage(
+      { type: 'GET_SHARED_FILES' },
+      [channel.port2]
+    );
+
+    const result = await responsePromise;
+    if (!result || !result.files || result.files.length === 0) return;
+
+    // Pega o primeiro arquivo compartilhado e processa
+    const file = result.files[0];
+    showToast('📥 Arquivo recebido! Processando...', 'success');
+    await processFile(file);
+  } catch (err) {
+    console.error('Erro ao receber arquivo compartilhado:', err);
+    showToast('Não consegui pegar o arquivo compartilhado', 'error');
+  }
+}
 
 // Detecção SUPER ROBUSTA de PDF (3 formas)
 async function detectIsPdf(file) {
@@ -1081,9 +1385,26 @@ function openReviewModal() {
   toggleWarrantyField();
   document.getElementById('reviewWarranty').value = a.garantia_sugerida_meses || '';
 
+  // Popular dropdown de pastas personalizadas
+  populateCustomFolderDropdown();
+
   document.getElementById('reviewType').addEventListener('change', toggleWarrantyField);
 
   openModal('reviewModal');
+}
+
+function populateCustomFolderDropdown() {
+  const select = document.getElementById('reviewCustomFolder');
+  if (!select) return;
+  const folders = getCustomFolders();
+  // Limpar dropdown e popular
+  select.innerHTML = '<option value="">— Nenhuma —</option>';
+  folders.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.id;
+    opt.textContent = `${f.icon} ${f.name}`;
+    select.appendChild(opt);
+  });
 }
 
 function toggleWarrantyField() {
@@ -1101,6 +1422,7 @@ async function saveDocument() {
     const tipo = document.getElementById('reviewType').value;
     const garantiaMeses = parseInt(document.getElementById('reviewWarranty').value) || null;
     const dataCompra = document.getElementById('reviewDate').value;
+    const customFolderId = document.getElementById('reviewCustomFolder').value || null;
 
     const docData = {
       tipo: tipo,
@@ -1112,6 +1434,7 @@ async function saveDocument() {
       vencimento: pendingDoc.analysis.vencimento || null,
       garantia_meses: garantiaMeses,
       garantia_vence: null,
+      customFolder: customFolderId,
       productPhoto: pendingDoc.productPhoto || null,
       criado_em: window.fbHelpers.serverTimestamp(),
       uid: currentUser.uid
@@ -1190,7 +1513,7 @@ function renderRecent() {
   container.innerHTML = recents.map(d => docCardHTML(d)).join('');
 }
 
-function docCardHTML(d) {
+function docCardHTML(d, searchTerm) {
   const photo = d.productPhoto || d.photoUrl;
   const photoHTML = photo
     ? `<img src="${escapeHtml(photo)}" onerror="this.parentElement.innerHTML='${TIPO_ICONS[d.tipo]||'📄'}'">`
@@ -1205,12 +1528,23 @@ function docCardHTML(d) {
     else badge = `<span class="badge badge-ok">Garantia ativa</span>`;
   }
 
+  // Destacar termo de busca, se houver
+  const hilite = (text) => {
+    if (!text) return '';
+    const safe = escapeHtml(text);
+    if (!searchTerm) return safe;
+    // Escapa regex special chars do termo
+    const safeTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('(' + safeTerm + ')', 'gi');
+    return safe.replace(re, '<span class="search-highlight">$1</span>');
+  };
+
   return `
     <div class="doc-card" onclick="showDocDetail('${d.id}')">
       <div class="doc-photo">${photoHTML}</div>
       <div class="doc-info">
-        <div class="doc-name">${escapeHtml(d.produto || d.loja || 'Documento')}</div>
-        <div class="doc-meta">${escapeHtml(d.loja || '')} ${d.data ? '· ' + formatDate(d.data) : ''}</div>
+        <div class="doc-name">${hilite(d.produto || d.loja || 'Documento')}</div>
+        <div class="doc-meta">${hilite(d.loja || '')} ${d.data ? '· ' + formatDate(d.data) : ''}</div>
         ${badge}
         ${d.valor ? ` <span class="badge badge-info">R$ ${formatMoney(d.valor)}</span>` : ''}
       </div>
@@ -1228,6 +1562,200 @@ function updateFolderCounts() {
   document.getElementById('statNotas').textContent = counts.nota_fiscal;
   document.getElementById('statRecibos').textContent = counts.recibo;
   document.getElementById('statBoletos').textContent = counts.boleto;
+
+  // Renderiza as pastas personalizadas
+  renderCustomFoldersList();
+}
+
+// ========== PASTAS PERSONALIZADAS ==========
+function getCustomFoldersKey() {
+  return 'notafacil_folders_' + (currentUser ? currentUser.uid : 'guest');
+}
+
+function getCustomFolders() {
+  try {
+    const raw = localStorage.getItem(getCustomFoldersKey());
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveCustomFolders(folders) {
+  try {
+    localStorage.setItem(getCustomFoldersKey(), JSON.stringify(folders));
+  } catch (e) {
+    console.warn('Erro ao salvar pastas:', e);
+  }
+}
+
+function openCreateFolderModal() {
+  document.getElementById('newFolderName').value = '';
+  document.getElementById('newFolderIcon').value = '📦';
+  openModal('createFolderModal');
+  setTimeout(() => document.getElementById('newFolderName').focus(), 100);
+}
+window.openCreateFolderModal = openCreateFolderModal;
+
+function saveNewFolder() {
+  const name = document.getElementById('newFolderName').value.trim();
+  const icon = document.getElementById('newFolderIcon').value.trim() || '📦';
+
+  if (!name) {
+    showToast('Digite um nome pra pasta', 'error');
+    return;
+  }
+  if (name.length > 30) {
+    showToast('Nome muito longo (máx 30 caracteres)', 'error');
+    return;
+  }
+
+  const folders = getCustomFolders();
+
+  // Não permite nome duplicado
+  if (folders.some(f => f.name.toLowerCase() === name.toLowerCase())) {
+    showToast('Já existe uma pasta com esse nome', 'error');
+    return;
+  }
+
+  const newFolder = {
+    id: 'custom_' + Date.now(),
+    name: name,
+    icon: icon,
+    created: new Date().toISOString()
+  };
+
+  folders.push(newFolder);
+  saveCustomFolders(folders);
+
+  closeModal('createFolderModal');
+  showToast('Pasta criada! ✅', 'success');
+  renderCustomFoldersList();
+}
+window.saveNewFolder = saveNewFolder;
+
+function renderCustomFoldersList() {
+  const container = document.getElementById('customFoldersList');
+  if (!container) return;
+  const folders = getCustomFolders();
+
+  if (folders.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = '<div class="section-label" style="margin-top:16px;">Minhas pastas</div>' +
+    folders.map(f => {
+      const count = currentDocs.filter(d => d.customFolder === f.id).length;
+      return `
+        <div class="folder folder-custom" onclick="openCustomFolder('${f.id}')">
+          <span class="folder-icon">${escapeHtml(f.icon)}</span>
+          <div class="folder-info">
+            <div class="folder-name">${escapeHtml(f.name)}</div>
+            <div class="folder-count">${count} ${count === 1 ? 'documento' : 'documentos'}</div>
+          </div>
+          <button class="folder-custom-delete" onclick="event.stopPropagation();deleteCustomFolder('${f.id}', '${escapeHtml(f.name).replace(/'/g, '&#39;')}')">🗑️</button>
+          <span class="folder-arrow">›</span>
+        </div>
+      `;
+    }).join('');
+}
+
+function deleteCustomFolder(id, name) {
+  // Conta quantos documentos estão nessa pasta
+  const docsInFolder = currentDocs.filter(d => d.customFolder === id).length;
+  const msg = docsInFolder > 0
+    ? `Excluir a pasta "${name}"? Os ${docsInFolder} documento(s) dela continuam salvos, só ficam sem essa categoria.`
+    : `Excluir a pasta "${name}"?`;
+  if (!confirm(msg)) return;
+
+  const folders = getCustomFolders().filter(f => f.id !== id);
+  saveCustomFolders(folders);
+  renderCustomFoldersList();
+  showToast('Pasta excluída', 'success');
+}
+window.deleteCustomFolder = deleteCustomFolder;
+
+function openCustomFolder(id) {
+  const folder = getCustomFolders().find(f => f.id === id);
+  if (!folder) return;
+  currentFolderType = 'custom:' + id;
+  const docs = currentDocs.filter(d => d.customFolder === id);
+  document.getElementById('folderTitle').textContent = `${folder.icon} ${folder.name}`;
+  const container = document.getElementById('folderContents');
+  if (docs.length === 0) {
+    container.innerHTML = `<div class="empty-state"><span class="ico">📭</span>Pasta vazia</div>`;
+  } else {
+    container.innerHTML = docs.map(d => docCardHTML(d)).join('');
+  }
+  showScreen('folderlist');
+}
+window.openCustomFolder = openCustomFolder;
+
+// ========== BUSCA ==========
+let searchTimer = null;
+function handleSearch(query) {
+  // Mostrar/esconder botão X
+  document.getElementById('searchClear').style.display = query ? 'flex' : 'none';
+
+  // Debounce: só busca depois que parar de digitar por 200ms
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => doSearch(query), 200);
+}
+window.handleSearch = handleSearch;
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').style.display = 'none';
+  doSearch('');
+}
+window.clearSearch = clearSearch;
+
+function doSearch(query) {
+  const foldersView = document.getElementById('foldersView');
+  const resultsBox = document.getElementById('searchResults');
+  const resultsList = document.getElementById('searchResultsList');
+  const resultsLabel = document.getElementById('searchResultsLabel');
+
+  if (!query || !query.trim()) {
+    // Sem busca: mostra a visão normal
+    foldersView.style.display = '';
+    resultsBox.style.display = 'none';
+    return;
+  }
+
+  const q = query.trim().toLowerCase();
+
+  // Filtra documentos que dão match em QUALQUER campo
+  const matches = currentDocs.filter(d => {
+    const fields = [
+      d.produto, d.loja, d.cnpj,
+      String(d.valor || ''),
+      d.data, d.vencimento,
+      TIPO_LABELS[d.tipo] || d.tipo,
+      d.resumo
+    ];
+    return fields.some(f => f && String(f).toLowerCase().includes(q));
+  });
+
+  // Atualiza label
+  resultsLabel.textContent = matches.length === 0
+    ? 'Nenhum resultado'
+    : `${matches.length} ${matches.length === 1 ? 'resultado' : 'resultados'} para "${escapeHtml(query)}"`;
+
+  // Renderiza
+  foldersView.style.display = 'none';
+  resultsBox.style.display = '';
+
+  if (matches.length === 0) {
+    resultsList.innerHTML = `
+      <div class="search-no-results">
+        🔍 Nada encontrado com "<strong>${escapeHtml(query)}</strong>".<br>
+        <span style="font-size:12px;color:#AAA;">Tente outras palavras (loja, produto, valor ou tipo).</span>
+      </div>`;
+  } else {
+    resultsList.innerHTML = matches.map(d => docCardHTML(d, q)).join('');
+  }
 }
 
 function openFolder(type) {
@@ -1280,6 +1808,14 @@ function showDocDetail(id) {
     html += `<div class="detail-row"><span class="detail-label">Garantia vence em</span><span class="detail-value" style="color:${cor};">${formatDate(d.garantia_vence)} (${days < 0 ? 'vencida há ' + Math.abs(days) + ' dias' : 'em ' + days + ' dias'})</span></div>`;
   }
 
+  // Pasta personalizada
+  const customFolders = getCustomFolders();
+  const currentFolder = d.customFolder ? customFolders.find(f => f.id === d.customFolder) : null;
+  const folderText = currentFolder
+    ? `${currentFolder.icon} ${escapeHtml(currentFolder.name)}`
+    : '<span style="color:#AAA;">— Nenhuma —</span>';
+  html += `<div class="detail-row"><span class="detail-label">Pasta personalizada</span><span class="detail-value">${folderText} <button class="btn-link" style="margin-left:6px;" onclick="changeDocFolder('${d.id}')">alterar</button></span></div>`;
+
   document.getElementById('detailContent').innerHTML = html;
 
   // Botão de ação: agendar (se tem garantia) ou ver no maps (cnpj)
@@ -1295,6 +1831,60 @@ function showDocDetail(id) {
   openModal('detailModal');
 }
 window.showDocDetail = showDocDetail;
+
+// Permite o usuário mudar a pasta personalizada de um documento existente
+async function changeDocFolder(docId) {
+  const d = currentDocs.find(x => x.id === docId);
+  if (!d) return;
+
+  const folders = getCustomFolders();
+  let optionsText = '0 - Remover (nenhuma)\n';
+  folders.forEach((f, i) => { optionsText += `${i+1} - ${f.icon} ${f.name}\n`; });
+  optionsText += `\nDigite o número da pasta (ou "n" pra criar nova):`;
+
+  const choice = prompt(optionsText, '0');
+  if (choice === null) return; // cancelou
+
+  let newFolderId = null;
+
+  if (choice.toLowerCase() === 'n') {
+    closeModal('detailModal');
+    openCreateFolderModal();
+    return;
+  }
+
+  const idx = parseInt(choice);
+  if (isNaN(idx)) {
+    showToast('Resposta inválida', 'error');
+    return;
+  }
+  if (idx === 0) {
+    newFolderId = null;
+  } else if (idx >= 1 && idx <= folders.length) {
+    newFolderId = folders[idx - 1].id;
+  } else {
+    showToast('Número inválido', 'error');
+    return;
+  }
+
+  try {
+    showLoading('Atualizando pasta...');
+    const { doc, updateDoc } = window.fbHelpers;
+    const docRef = doc(window.fbDb, 'documentos', docId);
+    await updateDoc(docRef, { customFolder: newFolderId });
+    d.customFolder = newFolderId;
+    hideLoading();
+    showToast('Pasta atualizada ✅', 'success');
+    // Refresh tela de detalhes e contadores
+    showDocDetail(docId);
+    renderCustomFoldersList();
+  } catch (err) {
+    hideLoading();
+    showToast('Erro ao atualizar: ' + err.message, 'error');
+  }
+}
+window.changeDocFolder = changeDocFolder;
+
 
 async function deleteCurrentDoc() {
   if (!currentDetailDoc) return;
@@ -1390,6 +1980,192 @@ function daysUntil(dateStr) {
   const target = new Date(dateStr);
   target.setHours(0,0,0,0);
   return Math.round((target - today) / (1000 * 60 * 60 * 24));
+}
+
+// ========== LIGHTBOX: VISUALIZAR FOTO EM TELA CHEIA COM ZOOM ==========
+let lightboxState = {
+  scale: 1,
+  tx: 0,
+  ty: 0,
+  // tracking de gestos
+  pinchStartDist: 0,
+  pinchStartScale: 1,
+  panStartX: 0,
+  panStartY: 0,
+  panStartTx: 0,
+  panStartTy: 0,
+  lastTapTime: 0
+};
+
+function openLightbox(src) {
+  if (!src) return;
+  const lb = document.getElementById('photoLightbox');
+  const img = document.getElementById('lightboxImg');
+  img.src = src;
+
+  // Reset zoom/pan
+  lightboxState.scale = 1;
+  lightboxState.tx = 0;
+  lightboxState.ty = 0;
+  updateLightboxTransform();
+
+  lb.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Esconder a dica depois de 3 segundos
+  const hint = document.getElementById('lightboxHint');
+  if (hint) {
+    hint.style.opacity = '1';
+    setTimeout(() => { hint.style.opacity = '0'; hint.style.transition = 'opacity 0.6s'; }, 3000);
+  }
+}
+window.openLightbox = openLightbox;
+
+function closeLightbox(event) {
+  // Se clicou na imagem (não no fundo nem no X), não fecha
+  if (event && event.target && event.target.id === 'lightboxImg') return;
+  const lb = document.getElementById('photoLightbox');
+  lb.classList.remove('active');
+  document.body.style.overflow = '';
+}
+window.closeLightbox = closeLightbox;
+
+function updateLightboxTransform() {
+  const img = document.getElementById('lightboxImg');
+  if (!img) return;
+  img.style.transform = `translate(${lightboxState.tx}px, ${lightboxState.ty}px) scale(${lightboxState.scale})`;
+}
+
+function clampPan() {
+  // Não deixa a imagem sair muito longe da tela quando muito zoomada
+  const img = document.getElementById('lightboxImg');
+  if (!img) return;
+  const rect = img.getBoundingClientRect();
+  const maxX = Math.max(0, (rect.width - window.innerWidth) / 2 + 50);
+  const maxY = Math.max(0, (rect.height - window.innerHeight) / 2 + 50);
+  lightboxState.tx = Math.max(-maxX, Math.min(maxX, lightboxState.tx));
+  lightboxState.ty = Math.max(-maxY, Math.min(maxY, lightboxState.ty));
+}
+
+// Init dos event listeners do lightbox quando o DOM tá pronto
+function initLightboxGestures() {
+  const img = document.getElementById('lightboxImg');
+  if (!img) return;
+
+  // --- Touch (celular): pinch-to-zoom e pan ---
+  img.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      // Início do pinch
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lightboxState.pinchStartDist = Math.sqrt(dx*dx + dy*dy);
+      lightboxState.pinchStartScale = lightboxState.scale;
+    } else if (e.touches.length === 1) {
+      // Possível início de pan ou double-tap
+      const now = Date.now();
+      const timeSinceLastTap = now - lightboxState.lastTapTime;
+      if (timeSinceLastTap < 350) {
+        // Double tap: alterna entre 1x e 2.5x
+        e.preventDefault();
+        if (lightboxState.scale > 1.1) {
+          lightboxState.scale = 1;
+          lightboxState.tx = 0;
+          lightboxState.ty = 0;
+        } else {
+          lightboxState.scale = 2.5;
+        }
+        updateLightboxTransform();
+        lightboxState.lastTapTime = 0;
+      } else {
+        lightboxState.lastTapTime = now;
+      }
+      // Pan setup
+      lightboxState.panStartX = e.touches[0].clientX;
+      lightboxState.panStartY = e.touches[0].clientY;
+      lightboxState.panStartTx = lightboxState.tx;
+      lightboxState.panStartTy = lightboxState.ty;
+    }
+  }, { passive: false });
+
+  img.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      // Pinch zoom
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (lightboxState.pinchStartDist > 0) {
+        let newScale = lightboxState.pinchStartScale * (dist / lightboxState.pinchStartDist);
+        newScale = Math.max(1, Math.min(5, newScale));
+        lightboxState.scale = newScale;
+        if (newScale === 1) {
+          lightboxState.tx = 0;
+          lightboxState.ty = 0;
+        }
+        updateLightboxTransform();
+      }
+    } else if (e.touches.length === 1 && lightboxState.scale > 1) {
+      // Pan (só se estiver zoomado)
+      e.preventDefault();
+      const dx = e.touches[0].clientX - lightboxState.panStartX;
+      const dy = e.touches[0].clientY - lightboxState.panStartY;
+      lightboxState.tx = lightboxState.panStartTx + dx;
+      lightboxState.ty = lightboxState.panStartTy + dy;
+      clampPan();
+      updateLightboxTransform();
+    }
+  }, { passive: false });
+
+  // --- Desktop (mouse): scroll wheel pra zoom + duplo clique ---
+  img.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    let newScale = lightboxState.scale + delta;
+    newScale = Math.max(1, Math.min(5, newScale));
+    lightboxState.scale = newScale;
+    if (newScale === 1) {
+      lightboxState.tx = 0;
+      lightboxState.ty = 0;
+    }
+    updateLightboxTransform();
+  }, { passive: false });
+
+  img.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    if (lightboxState.scale > 1.1) {
+      lightboxState.scale = 1;
+      lightboxState.tx = 0;
+      lightboxState.ty = 0;
+    } else {
+      lightboxState.scale = 2.5;
+    }
+    updateLightboxTransform();
+  });
+
+  // --- Desktop (mouse): arrastar pra mover quando zoomado ---
+  let isDragging = false;
+  img.addEventListener('mousedown', (e) => {
+    if (lightboxState.scale <= 1) return;
+    isDragging = true;
+    lightboxState.panStartX = e.clientX;
+    lightboxState.panStartY = e.clientY;
+    lightboxState.panStartTx = lightboxState.tx;
+    lightboxState.panStartTy = lightboxState.ty;
+    img.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - lightboxState.panStartX;
+    const dy = e.clientY - lightboxState.panStartY;
+    lightboxState.tx = lightboxState.panStartTx + dx;
+    lightboxState.ty = lightboxState.panStartTy + dy;
+    clampPan();
+    updateLightboxTransform();
+  });
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    img.style.cursor = '';
+  });
 }
 
 // ========== PWA: SERVICE WORKER E INSTALAÇÃO ==========

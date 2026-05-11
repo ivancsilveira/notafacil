@@ -2,7 +2,7 @@
 
 > Sistema web de organização automática de notas fiscais, recibos, boletos e garantias com IA (Claude) e Firebase.
 
-**Versão atual:** v1.0.5
+**Versão atual:** v1.0.7
 **Última atualização:** 10/05/2026
 **Construído por:** Ivan Silveira (com assistência do Claude da Anthropic)
 
@@ -189,6 +189,8 @@ Se mudar o `service-worker.js`, atualizar também a constante `CACHE_NAME` pra f
 | v1.0.3 | Detecção robusta de PDF via magic bytes (`%PDF-`) |
 | v1.0.4 | Servidor Cloud Function (CORS resolvido, chave Claude protegida no servidor) |
 | v1.0.5 | PWA instalável (manifest, service worker, ícones) |
+| v1.0.6 | Busca, zoom na foto (lightbox), pastas personalizadas, login melhorado (sempre pede escolha de conta) |
+| v1.0.7 | Web Share Target: recebe arquivos compartilhados de outros apps (WhatsApp, Fotos, etc) no Android |
 
 ---
 

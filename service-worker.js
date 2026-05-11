@@ -1,13 +1,17 @@
-// NotaFácil Service Worker — v1.0.5
+// NotaFácil Service Worker — v1.0.7
 // Permite o app funcionar offline (visualizar documentos já enviados)
 // e acelera o carregamento.
+// Inclui Web Share Target: receber fotos/PDFs compartilhados do Android.
 
-const CACHE_NAME = 'notafacil-v1.0.5';
+const CACHE_NAME = 'notafacil-v1.0.7';
 const URLS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json'
 ];
+
+// Armazena temporariamente arquivos compartilhados pra repassar pro app
+let pendingSharedFiles = [];
 
 // Instalação: baixa os arquivos e guarda no cache
 self.addEventListener('install', (event) => {
@@ -31,21 +35,53 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: "network first" — sempre tenta a internet primeiro,
-// se falhar (sem conexão), usa o cache.
+// Receber arquivos compartilhados de outros apps (Android)
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  const url = new URL(req.url);
+
+  // ---- WEB SHARE TARGET: intercepta o POST que outros apps mandam ----
+  if (req.method === 'POST' && url.pathname.endsWith('/') && url.pathname.includes('notafacil')) {
+    event.respondWith((async () => {
+      try {
+        const formData = await req.formData();
+        const files = formData.getAll('shared_files');
+        if (files.length > 0) {
+          pendingSharedFiles = files;
+        }
+      } catch (e) {
+        console.warn('Share target error:', e);
+      }
+      // Redireciona pra home, que vai pegar o arquivo armazenado
+      return Response.redirect('./?shared=1', 303);
+    })());
+    return;
+  }
+
+  // Cliente perguntando se tem arquivo compartilhado pendente
+  if (url.searchParams.has('check-shared')) {
+    event.respondWith((async () => {
+      const files = pendingSharedFiles;
+      pendingSharedFiles = []; // consome (limpa)
+      // Não dá pra mandar File diretamente; criamos um Blob URL temporário
+      // Em vez disso, deixamos o app pegar via message (postMessage)
+      return new Response(JSON.stringify({ count: files.length }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    })());
+    return;
+  }
 
   // Não interceptar chamadas pra Firebase/Claude/Google (precisam ser sempre online)
-  const url = req.url;
+  const urlStr = req.url;
   if (
-    url.includes('firestore.googleapis.com') ||
-    url.includes('firebaseio.com') ||
-    url.includes('firebasestorage') ||
-    url.includes('googleapis.com') ||
-    url.includes('callclaude') ||
-    url.includes('accounts.google.com') ||
-    url.includes('gstatic.com')
+    urlStr.includes('firestore.googleapis.com') ||
+    urlStr.includes('firebaseio.com') ||
+    urlStr.includes('firebasestorage') ||
+    urlStr.includes('googleapis.com') ||
+    urlStr.includes('callclaude') ||
+    urlStr.includes('accounts.google.com') ||
+    urlStr.includes('gstatic.com')
   ) {
     return; // deixa o navegador lidar normalmente
   }
@@ -65,4 +101,13 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => caches.match(req))
   );
+});
+
+// Recebe mensagem do app pedindo os arquivos compartilhados
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'GET_SHARED_FILES') {
+    const files = pendingSharedFiles;
+    pendingSharedFiles = []; // consome
+    event.ports[0].postMessage({ files });
+  }
 });
