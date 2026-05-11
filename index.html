@@ -180,7 +180,7 @@
   .upload-icon { font-size: 48px; margin-bottom: 8px; }
   .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
   .upload-sub { font-size: 13px; color: #888; margin-bottom: 16px; }
-  #fileInput, #cameraInput, #cloudInput { display: none; }
+  #fileInput, #cameraInput { display: none; }
 
   /* SECTION LABEL */
   .section-label {
@@ -618,10 +618,24 @@
     padding: 10px 0;
     border-bottom: 1px solid #F0F0F0;
     font-size: 14px;
+    gap: 12px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
   .detail-row:last-child { border-bottom: none; }
-  .detail-label { color: #888; }
-  .detail-value { font-weight: 500; text-align: right; max-width: 60%; }
+  .detail-label {
+    color: #888;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+  .detail-value {
+    font-weight: 500;
+    text-align: right;
+    max-width: 65%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
 
   /* CONFIG SCREEN */
   .config-section { margin-bottom: 20px; }
@@ -649,7 +663,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.19 · 11/05/2026
+    Versão 1.0.25 · 11/05/2026
   </div>
 </div>
 
@@ -659,7 +673,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.19</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.25</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -680,12 +694,14 @@
           <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()" style="flex:1;min-width:0;">📎 Arquivo</button>
         </div>
         <div class="btn-row" style="margin-top:8px;">
-          <button class="btn btn-secondary" onclick="document.getElementById('cloudInput').click()" style="width:100%;background:#E3F2FD;color:#1565C0;border-color:#BBDEFB;">☁️ Importar da nuvem (Drive, OneDrive, Dropbox...)</button>
+          <button class="btn btn-secondary" onclick="openCloudHelpModal()" style="width:100%;background:#E3F2FD;color:#1565C0;border-color:#BBDEFB;">☁️ Como importar do Drive / OneDrive / iCloud</button>
         </div>
-        <p style="font-size:11px;color:#888;margin-top:8px;line-height:1.4;">💡 Dica: pra escolher de Google Drive, OneDrive, Dropbox ou iCloud, use "Importar da nuvem". Os apps precisam estar instalados no celular.</p>
+        <div class="btn-row" style="margin-top:8px;">
+          <button class="btn btn-secondary" onclick="openQrScanner()" style="width:100%;background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7;">📱 Escanear QR Code (pagar boleto rápido)</button>
+        </div>
+        <p style="font-size:11px;color:#888;margin-top:8px;line-height:1.4;">💡 Dica: <strong>Escanear QR Code</strong> abre a câmera e lê QR Codes de boletos PIX direto — o jeito mais rápido de pagar.</p>
         <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple onchange="handleFileSelect(event)">
         <input type="file" id="fileInput" accept="image/*,application/pdf" multiple onchange="handleFileSelect(event)">
-        <input type="file" id="cloudInput" multiple onchange="handleFileSelect(event)">
       </div>
 
       <div class="section-label">Últimos enviados</div>
@@ -847,10 +863,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.19</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.25</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.19 - PDFs abrem no Safari; corrigido bug do zoom em PDF)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.25 - modal de ajuda pra importar de nuvens iOS)</span>
           </p>
         </div>
       </div>
@@ -1063,6 +1079,82 @@
   </div>
 </div>
 
+<!-- MODAL: AJUDA PARA IMPORTAR DA NUVEM -->
+<div id="cloudHelpModal" class="modal-overlay" style="z-index:250;" onclick="if(event.target===this)closeModal('cloudHelpModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('cloudHelpModal')">×</button>
+    <div class="modal-title">☁️ Importar do Google Drive / OneDrive / iCloud</div>
+
+    <p style="color:#666;font-size:13px;margin-bottom:14px;line-height:1.5;">
+      Pra puxar arquivos do <strong>Google Drive</strong>, <strong>OneDrive</strong>, <strong>iCloud</strong> ou <strong>Dropbox</strong>, faça assim:
+    </p>
+
+    <!-- PASSO 1 -->
+    <div style="background:#E3F2FD;border-radius:8px;padding:12px;margin-bottom:10px;">
+      <div style="font-weight:600;color:#1565C0;font-size:13px;margin-bottom:4px;">1️⃣ Configure uma vez só (do iPhone)</div>
+      <div style="font-size:12px;color:#1565C0;line-height:1.5;">
+        Abre o app <strong>Arquivos</strong> do iPhone → toca em <strong>"Procurar"</strong> (canto inferior direito) → toca nos <strong>3 pontinhos •••</strong> no topo → toca em <strong>"Editar"</strong> → liga as chaves de Google Drive, OneDrive, etc.
+      </div>
+    </div>
+
+    <!-- PASSO 2 -->
+    <div style="background:#E8F5E9;border-radius:8px;padding:12px;margin-bottom:10px;">
+      <div style="font-weight:600;color:#2E7D32;font-size:13px;margin-bottom:4px;">2️⃣ Pra importar do app NotaFácil:</div>
+      <div style="font-size:12px;color:#2E7D32;line-height:1.5;">
+        Toca em <strong>"📎 Arquivo"</strong> → no menu, toca em <strong>"Escolher Arquivos"</strong> → no app Arquivos, toca em <strong>"Procurar"</strong> → escolhe a nuvem desejada → navega e seleciona o arquivo.
+      </div>
+    </div>
+
+    <!-- ATALHOS -->
+    <div style="background:#FFF3E8;border-radius:8px;padding:12px;margin-bottom:14px;">
+      <div style="font-weight:600;color:#8B4500;font-size:13px;margin-bottom:6px;">⚡ Atalho mais rápido:</div>
+      <div style="font-size:12px;color:#8B4500;line-height:1.5;margin-bottom:8px;">
+        Abre o app da nuvem (Drive/OneDrive) → seleciona o arquivo → toca em <strong>"Compartilhar"</strong> → escolhe o NotaFácil.
+      </div>
+      <button class="btn btn-secondary" onclick="openFilesAppShortcut()" style="width:100%;font-size:12px;padding:8px;">📂 Tentar abrir app Arquivos agora</button>
+    </div>
+
+    <p style="font-size:11px;color:#888;line-height:1.4;">
+      💡 Essa é uma limitação do iOS — apps da web não conseguem listar diretamente os serviços de nuvem. A solução acima é o jeito oficial recomendado pela Apple.
+    </p>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn" onclick="closeModal('cloudHelpModal');document.getElementById('fileInput').click()" style="width:100%;">📎 Abrir seletor de arquivos agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SCANNER DE QR CODE COM CÂMERA AO VIVO -->
+<div id="qrScannerModal" class="modal-overlay" style="z-index:300;background:#000;align-items:center;" onclick="if(event.target===this)closeQrScanner()">
+  <div class="modal" style="background:#000;color:white;border-radius:0;max-height:100vh;height:100vh;padding:0;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:rgba(0,0,0,0.7);position:relative;z-index:10;">
+      <div style="font-weight:600;font-size:16px;">📱 Escanear QR Code</div>
+      <button onclick="closeQrScanner()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;">×</button>
+    </div>
+
+    <div style="flex:1;position:relative;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;">
+      <video id="qrScannerVideo" style="max-width:100%;max-height:100%;object-fit:contain;" playsinline></video>
+      <canvas id="qrScannerCanvas" style="display:none;"></canvas>
+
+      <!-- Quadrado de mira -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:75vmin;height:75vmin;max-width:340px;max-height:340px;border:3px solid rgba(255,107,53,0.9);border-radius:24px;box-shadow:0 0 0 9999px rgba(0,0,0,0.4);pointer-events:none;">
+        <div style="position:absolute;top:-3px;left:-3px;width:30px;height:30px;border-top:5px solid #FF6B35;border-left:5px solid #FF6B35;border-radius:24px 0 0 0;"></div>
+        <div style="position:absolute;top:-3px;right:-3px;width:30px;height:30px;border-top:5px solid #FF6B35;border-right:5px solid #FF6B35;border-radius:0 24px 0 0;"></div>
+        <div style="position:absolute;bottom:-3px;left:-3px;width:30px;height:30px;border-bottom:5px solid #FF6B35;border-left:5px solid #FF6B35;border-radius:0 0 0 24px;"></div>
+        <div style="position:absolute;bottom:-3px;right:-3px;width:30px;height:30px;border-bottom:5px solid #FF6B35;border-right:5px solid #FF6B35;border-radius:0 0 24px 0;"></div>
+      </div>
+
+      <div id="qrScannerStatus" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:white;padding:10px 20px;border-radius:24px;font-size:14px;text-align:center;max-width:90%;">
+        Aponta a câmera pro QR Code do boleto
+      </div>
+    </div>
+
+    <div style="padding:16px;background:rgba(0,0,0,0.8);">
+      <button class="btn" onclick="closeQrScanner()" style="width:100%;background:rgba(255,255,255,0.15);color:white;border-color:transparent;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: CAMPOS EXTRAS (extraídos pela pasta inteligente) -->
 <div id="extraFieldsModal" class="modal-overlay" style="z-index:250;" onclick="if(event.target===this)closeModal('extraFieldsModal')">
   <div class="modal">
@@ -1162,6 +1254,10 @@
 
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
+
+<!-- jsQR — biblioteca de leitura de QR Code (gratuita, open source) -->
+<!-- https://github.com/cozmo/jsQR -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
 <!-- FIREBASE -->
 <script type="module">
@@ -1468,6 +1564,24 @@ async function processFile(file) {
     showLoading(claudeLabel);
     const analysis = await analyzeWithClaude(base64, mediaType);
 
+    // 📱 Tentar decodificar QR Code visualmente (PIX Copia e Cola)
+    // Só pra imagens (PDFs não suportam direto pelo jsQR — pulamos)
+    let pixQrCode = null;
+    if (mediaType !== 'application/pdf' && analysis.tem_qrcode !== false) {
+      showLoading('📱 Lendo QR Code...');
+      try {
+        const qrText = await decodeQrCodeFromImage(processedFile);
+        if (qrText && qrText.length > 50) {
+          // Heurística: códigos PIX BR Code são longos (200-500 chars)
+          // URLs curtas, e-mails, etc. também podem aparecer mas não interessam
+          pixQrCode = qrText;
+          console.log('QR Code decodificado com sucesso (' + qrText.length + ' chars)');
+        }
+      } catch (err) {
+        console.warn('Falha ao decodificar QR Code:', err);
+      }
+    }
+
     // Buscar foto do produto se for nota fiscal
     let productPhoto = null;
     if (analysis.tipo === 'nota_fiscal' && analysis.produto) {
@@ -1476,6 +1590,12 @@ async function processFile(file) {
     }
 
     hideLoading();
+
+    // Injetar o PIX decodificado no resultado da análise (sobrescreve o que Claude leu)
+    if (pixQrCode) {
+      analysis.pix_qrcode = pixQrCode;
+      analysis.tem_qrcode = true;
+    }
 
     // Abrir modal de revisão
     pendingDoc = {
@@ -1633,6 +1753,285 @@ async function convertImageToJpeg(file) {
   });
 }
 
+// ========== AJUDA PARA IMPORTAR DA NUVEM ==========
+function openCloudHelpModal() {
+  openModal('cloudHelpModal');
+}
+window.openCloudHelpModal = openCloudHelpModal;
+
+// Tenta abrir o app Arquivos do iPhone via esquema URL.
+// O esquema "shareddocuments://" é não-oficial mas funciona em vários casos no iOS.
+function openFilesAppShortcut() {
+  const start = Date.now();
+  window.location.href = 'shareddocuments://';
+  // Fallback: se em 500ms ainda estamos aqui, mostra instrução
+  setTimeout(() => {
+    if (Date.now() - start < 1500) {
+      showToast('Procure o app "Arquivos" (ícone azul de pasta) na tela inicial do iPhone', 'info');
+    }
+  }, 500);
+}
+window.openFilesAppShortcut = openFilesAppShortcut;
+
+// ========== SCANNER DE QR CODE AO VIVO (câmera) ==========
+let qrScannerStream = null;
+let qrScannerAnimationFrame = null;
+let qrScannerActive = false;
+
+async function openQrScanner() {
+  if (typeof jsQR === 'undefined') {
+    showToast('Leitor de QR Code não carregou. Tenta atualizar a página.', 'error');
+    return;
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('Seu navegador não suporta câmera.', 'error');
+    return;
+  }
+
+  const modal = document.getElementById('qrScannerModal');
+  const video = document.getElementById('qrScannerVideo');
+  const status = document.getElementById('qrScannerStatus');
+  if (!modal || !video) return;
+
+  modal.classList.add('active');
+  status.textContent = 'Pedindo acesso à câmera...';
+
+  try {
+    // Pede câmera traseira (environment) com resolução alta
+    qrScannerStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    });
+    video.srcObject = qrScannerStream;
+    video.setAttribute('playsinline', true);
+    await video.play();
+    status.textContent = 'Aponta a câmera pro QR Code';
+    qrScannerActive = true;
+    scanQrFrame();
+  } catch (err) {
+    console.error('Erro ao abrir câmera:', err);
+    status.textContent = '❌ Não consegui abrir a câmera. Vai em Ajustes do iPhone → Safari → Câmera → Permitir.';
+    showToast('Câmera não autorizada. Habilita nos ajustes do iPhone.', 'error');
+  }
+}
+window.openQrScanner = openQrScanner;
+
+function closeQrScanner() {
+  qrScannerActive = false;
+  if (qrScannerAnimationFrame) {
+    cancelAnimationFrame(qrScannerAnimationFrame);
+    qrScannerAnimationFrame = null;
+  }
+  if (qrScannerStream) {
+    qrScannerStream.getTracks().forEach(t => t.stop());
+    qrScannerStream = null;
+  }
+  const video = document.getElementById('qrScannerVideo');
+  if (video) {
+    video.pause();
+    video.srcObject = null;
+  }
+  const modal = document.getElementById('qrScannerModal');
+  if (modal) modal.classList.remove('active');
+}
+window.closeQrScanner = closeQrScanner;
+
+// Lê frame por frame procurando QR Code
+function scanQrFrame() {
+  if (!qrScannerActive) return;
+
+  const video = document.getElementById('qrScannerVideo');
+  const canvas = document.getElementById('qrScannerCanvas');
+  if (!video || !canvas) return;
+
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (w > 0 && h > 0) {
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(video, 0, 0, w, h);
+      const imageData = ctx.getImageData(0, 0, w, h);
+
+      try {
+        const code = jsQR(imageData.data, w, h, { inversionAttempts: 'dontInvert' });
+        if (code && code.data) {
+          // ✅ QR detectado! Processar
+          onQrCodeDetected(code.data);
+          return; // para o loop
+        }
+      } catch (err) {
+        // ignora erros pontuais
+      }
+    }
+  }
+
+  qrScannerAnimationFrame = requestAnimationFrame(scanQrFrame);
+}
+
+// Chamado quando o scanner detecta um QR Code com sucesso
+async function onQrCodeDetected(qrText) {
+  // Para o scanner
+  const status = document.getElementById('qrScannerStatus');
+  if (status) status.textContent = '✅ QR Code detectado!';
+
+  // Vibração tátil curta (se suportado)
+  if (navigator.vibrate) {
+    try { navigator.vibrate(100); } catch (e) {}
+  }
+
+  // Pequeno delay pra UI mostrar feedback antes de fechar
+  await new Promise(r => setTimeout(r, 400));
+
+  closeQrScanner();
+
+  // Decide o que fazer com o conteúdo do QR
+  if (qrText.length < 50) {
+    // QR pequeno: provavelmente não é PIX. Mostra o conteúdo
+    showToast('QR Code lido, mas não parece ser um PIX. Conteúdo: ' + qrText.substring(0, 50), 'info');
+    return;
+  }
+
+  // É um QR longo — provavelmente PIX. Cria um documento "boleto" com esse PIX
+  await createBoletoFromQrCode(qrText);
+}
+
+// Cria um documento boleto a partir de QR Code escaneado (sem foto)
+async function createBoletoFromQrCode(pixCode) {
+  if (!currentUser) {
+    showToast('Faz login primeiro', 'error');
+    return;
+  }
+
+  // Tenta extrair informações básicas do PIX BR Code
+  const info = parsePixBrCode(pixCode);
+
+  // Cria o pendingDoc igual ao fluxo normal de upload, mas sem foto
+  pendingDoc = {
+    file: null,
+    originalName: 'pix_escaneado',
+    base64: null,
+    mediaType: 'application/qrcode',
+    analysis: {
+      tipo: 'boleto',
+      loja: info.merchantName || 'Pagamento via PIX',
+      valor: info.amount || 0,
+      data: new Date().toISOString().split('T')[0],
+      vencimento: new Date().toISOString().split('T')[0],
+      pix_qrcode: pixCode,
+      tem_qrcode: true,
+      resumo: 'Boleto criado via leitura de QR Code'
+    },
+    productPhoto: null,
+    fromQrScan: true // marcador especial
+  };
+
+  showToast('QR Code lido! Revise os dados e salve.', 'success');
+  openReviewModal();
+}
+
+// Faz parsing básico do BR Code do PIX pra extrair valor e nome (best-effort)
+// Formato TLV: cada campo tem 4 chars (ID 2 + tamanho 2) + valor
+function parsePixBrCode(brCode) {
+  const result = { merchantName: null, amount: null };
+  try {
+    let i = 0;
+    while (i < brCode.length - 4) {
+      const id = brCode.substring(i, i + 2);
+      const len = parseInt(brCode.substring(i + 2, i + 4), 10);
+      if (isNaN(len)) break;
+      const value = brCode.substring(i + 4, i + 4 + len);
+
+      if (id === '54') {
+        // Valor da transação
+        const v = parseFloat(value);
+        if (!isNaN(v) && v > 0) result.amount = v;
+      } else if (id === '59') {
+        // Nome do recebedor
+        result.merchantName = value.trim();
+      }
+      i = i + 4 + len;
+    }
+  } catch (e) {
+    console.warn('Erro ao parsear BR Code:', e);
+  }
+  return result;
+}
+
+// ========== LEITURA DE QR CODE (jsQR) ==========
+// Decodifica QR Code de uma imagem usando a biblioteca jsQR.
+// Retorna o texto do QR Code (ex: o código PIX BR Code) ou null se não achou.
+async function decodeQrCodeFromImage(imageSource) {
+  // imageSource pode ser: Blob, File, base64 string, ou URL
+  if (typeof jsQR === 'undefined') {
+    console.warn('jsQR não está carregado');
+    return null;
+  }
+
+  try {
+    // Carrega a imagem num <img> pra poder pintar no canvas
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = () => resolve(im);
+      im.onerror = (e) => reject(new Error('Falha ao carregar imagem'));
+
+      if (typeof imageSource === 'string') {
+        // String pode ser base64 puro ou URL completa ou data URI
+        if (imageSource.startsWith('data:') || imageSource.startsWith('http')) {
+          im.src = imageSource;
+        } else {
+          // assume base64 puro de jpeg
+          im.src = 'data:image/jpeg;base64,' + imageSource;
+        }
+      } else if (imageSource instanceof Blob || imageSource instanceof File) {
+        im.src = URL.createObjectURL(imageSource);
+      } else {
+        reject(new Error('Tipo de imagem não suportado'));
+      }
+    });
+
+    // Pinta no canvas pra extrair pixel data
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // jsQR é mais rápido em imagens menores. Limita pra largura máxima de 1500px
+    const MAX_W = 1500;
+    let w = img.naturalWidth;
+    let h = img.naturalHeight;
+    if (w > MAX_W) {
+      const scale = MAX_W / w;
+      w = MAX_W;
+      h = Math.round(h * scale);
+    }
+    canvas.width = w;
+    canvas.height = h;
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const imageData = ctx.getImageData(0, 0, w, h);
+
+    // Tenta decodificar
+    const code = jsQR(imageData.data, w, h, {
+      inversionAttempts: 'attemptBoth' // tenta normal e invertido
+    });
+
+    if (code && code.data) {
+      return code.data;
+    }
+    return null;
+  } catch (err) {
+    console.warn('Erro ao decodificar QR Code:', err);
+    return null;
+  }
+}
+window.decodeQrCodeFromImage = decodeQrCodeFromImage;
+
 // ========== CLAUDE API ==========
 async function analyzeWithClaude(base64, mediaType) {
   const prompt = `Analise este documento brasileiro e extraia as informações. Responda APENAS um JSON puro, sem markdown, sem comentários, no formato exato:
@@ -1643,7 +2042,7 @@ async function analyzeWithClaude(base64, mediaType) {
   "cnpj": "CNPJ se visível, senão null",
   "chave_acesso": "chave de acesso da NF-e/NFC-e (EXATAMENTE 44 dígitos, só números, sem espaços) se visível, senão null",
   "linha_digitavel": "linha digitável do boleto (47 ou 48 dígitos, só números, sem espaços ou pontos) se for boleto, senão null",
-  "pix_qrcode": "código PIX Copia e Cola (BR Code) se houver QR Code de PIX no boleto, senão null",
+  "tem_qrcode": true | false (se há um QR Code visualmente no documento),
   "valor": número (apenas o valor, sem R$),
   "data": "YYYY-MM-DD" (data da compra/emissão),
   "vencimento": "YYYY-MM-DD" (apenas pra boletos, senão null),
@@ -1662,18 +2061,13 @@ Sobre "chave_acesso" — IMPORTANTE:
 
 Sobre "linha_digitavel" (boletos brasileiros) — IMPORTANTE:
 - A linha digitável de um boleto tem 47 dígitos (bancário) ou 48 dígitos (concessionária/arrecadação)
-- Aparece no topo do boleto, dividida em 4 ou 5 blocos separados por espaços ou pontos (exemplo: "23793.39001 60000.123456 71234.567890 1 12345678900000")
+- Aparece no topo do boleto, dividida em 4 ou 5 blocos separados por espaços ou pontos (exemplo: "23793.39001 60000.123456 71234.529017 1 14390000049000")
 - Extraia APENAS os números (47 ou 48 dígitos), sem espaços, pontos ou hífens
 - Se o documento NÃO é boleto, retorne null
 - Se for boleto mas a linha digitável não estiver legível, retorne null
 - Se a foto estiver borrada, prefira retornar null em vez de chutar
 
-Sobre "pix_qrcode" (QR Code de PIX em boletos) — IMPORTANTE:
-- Boletos modernos têm um QR Code do PIX que contém um código BR Code (PIX Copia e Cola)
-- Se você vê um QR Code no boleto E consegue identificar o texto do código PIX próximo a ele (ex: rotulado como "PIX Copia e Cola", "Copia e Cola PIX", "Código PIX"), extraia esse texto inteiro
-- O código PIX BR Code geralmente começa com "00020126" ou similar e é longo (200-500 caracteres alfanuméricos)
-- Se você só vê o QR Code mas o código BR não está escrito no documento como texto, retorne null (não tente decodificar QR)
-- Se não for boleto ou não houver código PIX visível como texto, retorne null
+Sobre "tem_qrcode" — apenas verifique visualmente se há um QR Code (aquele código quadrado preto-e-branco) no documento. Retorne true ou false. NÃO tente ler o conteúdo do QR Code — o app fará isso separadamente com uma biblioteca especializada.
 
 IMPORTANTE — DOCUMENTOS COM VÁRIAS PÁGINAS:
 - Se o documento (PDF ou imagem) tiver MAIS DE UMA PÁGINA, analise TODAS as páginas
@@ -2013,6 +2407,7 @@ async function finalizeSaveDocument(extraFields) {
       chave_acesso: chaveAcesso,
       linha_digitavel: linhaDigitavel,
       pix_qrcode: pendingDoc.analysis.pix_qrcode || null,
+      tem_qrcode: pendingDoc.analysis.tem_qrcode === true,
       vencimento: pendingDoc.analysis.vencimento || null,
       garantia_meses: garantiaMeses,
       garantia_vence: null,
@@ -2029,20 +2424,28 @@ async function finalizeSaveDocument(extraFields) {
       docData.garantia_vence = venceDate.toISOString().split('T')[0];
     }
 
-    // Upload da foto pro Storage
-    showLoading('Enviando foto pro Firebase...');
-    const { ref, uploadBytes, getDownloadURL, addDoc, collection } = window.fbHelpers;
-    const ext = pendingDoc.mediaType === 'application/pdf' ? 'pdf' : 'jpg';
-    const safeName = (pendingDoc.originalName || 'documento').replace(/[^a-zA-Z0-9._-]/g, '_');
-    const fileName = `notas/${currentUser.uid}/${Date.now()}_${safeName}.${ext}`;
-    const fileRef = ref(window.fbStorage, fileName);
-    await uploadBytes(fileRef, pendingDoc.file);
-    const photoUrl = await getDownloadURL(fileRef);
-    docData.photoUrl = photoUrl;
-    docData.photoPath = fileName;
+    // Upload da foto pro Storage (se houver arquivo — não há quando vem do scanner QR)
+    if (pendingDoc.file) {
+      showLoading('Enviando foto pro Firebase...');
+      const { ref, uploadBytes, getDownloadURL } = window.fbHelpers;
+      const ext = pendingDoc.mediaType === 'application/pdf' ? 'pdf' : 'jpg';
+      const safeName = (pendingDoc.originalName || 'documento').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `notas/${currentUser.uid}/${Date.now()}_${safeName}.${ext}`;
+      const fileRef = ref(window.fbStorage, fileName);
+      await uploadBytes(fileRef, pendingDoc.file);
+      const photoUrl = await getDownloadURL(fileRef);
+      docData.photoUrl = photoUrl;
+      docData.photoPath = fileName;
+    } else {
+      // Doc vindo do QR scanner — sem foto física
+      docData.photoUrl = null;
+      docData.photoPath = null;
+      docData.fromQrScan = true;
+    }
 
     // Salvar no Firestore
     showLoading('Quase lá...');
+    const { addDoc, collection } = window.fbHelpers;
     await addDoc(collection(window.fbDb, 'documentos'), docData);
 
     hideLoading();
@@ -2145,6 +2548,12 @@ function showExtraFieldsModal(folder, fields) {
   document.getElementById('extraFieldsDescription').innerHTML =
     `<strong>Instrução desta pasta:</strong><br>"${escapeHtml(folder.description).replace(/\n/g, '<br>')}"`;
 
+  // Restaura botões originais (Salvar sem extras / Salvar com extras)
+  // Caso o modal tenha sido usado antes em modo re-análise/edição
+  if (typeof restoreExtraFieldsModalButtons === 'function') {
+    restoreExtraFieldsModalButtons();
+  }
+
   const container = document.getElementById('extraFieldsContent');
   const keys = Object.keys(fields || {});
 
@@ -2158,7 +2567,9 @@ function showExtraFieldsModal(folder, fields) {
     container.innerHTML = keys.map(key => {
       // Formata o nome do campo: matricula_imovel → Matrícula Imóvel
       const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      const val = fields[key] === null || fields[key] === undefined ? '' : String(fields[key]);
+      const rawVal = fields[key] === null || fields[key] === undefined ? '' : String(fields[key]);
+      // Mostra datas formatadas em DD/MM/AAAA pro usuário ler/editar
+      const val = formatValueSmart(rawVal);
       const safeKey = escapeHtml(key);
       const safeVal = escapeHtml(val);
       return `
@@ -2189,7 +2600,8 @@ async function saveDocumentWithExtras() {
     const key = input.getAttribute('data-key');
     const value = input.value.trim();
     if (key) {
-      extraFields[key] = value || null;
+      // Converte DD/MM/AAAA de volta pra YYYY-MM-DD (formato ISO) antes de salvar
+      extraFields[key] = value ? parseValueSmart(value) : null;
     }
   });
 
@@ -2197,6 +2609,232 @@ async function saveDocumentWithExtras() {
   await finalizeSaveDocument(extraFields);
 }
 window.saveDocumentWithExtras = saveDocumentWithExtras;
+
+// ========== RE-ANALISAR DOCUMENTO JÁ SALVO COM PASTA INTELIGENTE ==========
+// Estado: doc atual que está sendo re-analisado
+let reanalyzingDoc = null;
+
+async function reanalyzeWithSmartFolder(docId) {
+  const d = currentDocs.find(x => x.id === docId);
+  if (!d) {
+    showToast('Documento não encontrado', 'error');
+    return;
+  }
+
+  const folder = d.customFolder ? getCustomFolders().find(f => f.id === d.customFolder) : null;
+  if (!folder || !folder.description) {
+    showToast('Este documento não está em uma pasta inteligente', 'error');
+    return;
+  }
+
+  if (!d.photoUrl) {
+    showToast('Foto/PDF do documento não encontrada', 'error');
+    return;
+  }
+
+  // Confirma com o usuário (vai gastar API do Claude)
+  const hasExisting = d.extraFields && Object.keys(d.extraFields).length > 0;
+  const msg = hasExisting
+    ? `Re-analisar este documento com a instrução atual da pasta "${folder.name}"?\n\nOs campos extras atuais serão SUBSTITUÍDOS pelos novos.`
+    : `Analisar este documento com a instrução da pasta "${folder.name}"?`;
+  if (!confirm(msg)) return;
+
+  try {
+    showLoading('🔄 Baixando o documento...');
+
+    // Baixa o arquivo do Firebase Storage
+    const response = await fetch(d.photoUrl);
+    if (!response.ok) throw new Error('Não consegui baixar o arquivo');
+    const blob = await response.blob();
+
+    // Converte pra base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result;
+        // Remove prefix "data:xxx;base64,"
+        const b64 = result.substring(result.indexOf(',') + 1);
+        resolve(b64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+    // Detecta tipo
+    const isPdf = (d.photoPath || d.photoUrl || '').toLowerCase().includes('.pdf');
+    const mediaType = isPdf ? 'application/pdf' : 'image/jpeg';
+
+    showLoading('🧠 Claude analisando com instrução da pasta...');
+
+    // Chama Claude
+    const extraFields = await analyzeWithSmartFolder(base64, mediaType, folder.description);
+
+    hideLoading();
+
+    // Guarda doc atual + abre modal de revisão
+    reanalyzingDoc = d;
+    showExtraFieldsModalForReanalyze(folder, extraFields);
+
+  } catch (err) {
+    hideLoading();
+    console.error('Erro na re-análise:', err);
+    showToast('Erro na re-análise: ' + (err.message || 'tente novamente'), 'error');
+  }
+}
+window.reanalyzeWithSmartFolder = reanalyzeWithSmartFolder;
+
+// Mostra modal de revisão dos campos extras (modo re-análise)
+function showExtraFieldsModalForReanalyze(folder, fields) {
+  document.getElementById('extraFieldsTitle').innerHTML = `🔄 Re-analisar: ${escapeHtml(folder.icon)} ${escapeHtml(folder.name)}`;
+  document.getElementById('extraFieldsDescription').innerHTML =
+    `<strong>Instrução desta pasta:</strong><br>"${escapeHtml(folder.description).replace(/\n/g, '<br>')}"`;
+
+  const container = document.getElementById('extraFieldsContent');
+  const keys = Object.keys(fields || {});
+
+  if (keys.length === 0) {
+    container.innerHTML = `
+      <div style="background:#FFF3E8;padding:12px;border-radius:8px;color:#8B5A0F;font-size:13px;text-align:center;">
+        ⚠️ Claude não conseguiu extrair os campos solicitados.<br>
+        Talvez a foto não esteja nítida ou a instrução precise ser mais clara.
+      </div>`;
+  } else {
+    container.innerHTML = keys.map(key => {
+      const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const rawVal = fields[key] === null || fields[key] === undefined ? '' : String(fields[key]);
+      const val = formatValueSmart(rawVal);
+      const safeKey = escapeHtml(key);
+      const safeVal = escapeHtml(val);
+      return `
+        <div class="form-group">
+          <label class="form-label">${escapeHtml(label)}</label>
+          <input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Trocar os botões pra ações de re-análise
+  const btnRow = document.querySelector('#extraFieldsModal .btn-row');
+  if (btnRow) {
+    btnRow.innerHTML = `
+      <button class="btn btn-secondary" onclick="closeModal('extraFieldsModal')">Cancelar</button>
+      <button class="btn" onclick="saveReanalyzedFields()">💾 Salvar campos</button>
+    `;
+  }
+
+  openModal('extraFieldsModal');
+}
+
+// Salva os campos extras re-analisados em documento JÁ existente
+async function saveReanalyzedFields() {
+  if (!reanalyzingDoc) return;
+
+  // Coleta valores dos inputs
+  const inputs = document.querySelectorAll('.extra-field-input');
+  const extraFields = {};
+  inputs.forEach(input => {
+    const key = input.getAttribute('data-key');
+    const value = input.value.trim();
+    if (key) {
+      // Converte DD/MM/AAAA de volta pra YYYY-MM-DD (formato ISO) antes de salvar
+      extraFields[key] = value ? parseValueSmart(value) : null;
+    }
+  });
+
+  try {
+    showLoading('Salvando campos extras...');
+    const { doc, updateDoc } = window.fbHelpers;
+    const docRef = doc(window.fbDb, 'documentos', reanalyzingDoc.id);
+    await updateDoc(docRef, { extraFields: extraFields });
+
+    // Atualiza local
+    reanalyzingDoc.extraFields = extraFields;
+    if (currentDetailDoc && currentDetailDoc.id === reanalyzingDoc.id) {
+      currentDetailDoc.extraFields = extraFields;
+    }
+
+    hideLoading();
+    closeModal('extraFieldsModal');
+    showToast('Campos extras atualizados ✅', 'success');
+
+    // Restaurar os botões originais do modal (pro caso de usar de novo no fluxo normal)
+    restoreExtraFieldsModalButtons();
+
+    // Re-renderizar o detalhe se estiver aberto
+    if (currentDetailDoc && currentDetailDoc.id === reanalyzingDoc.id) {
+      showDocDetail(reanalyzingDoc.id);
+    }
+    reanalyzingDoc = null;
+  } catch (err) {
+    hideLoading();
+    showToast('Erro ao salvar: ' + err.message, 'error');
+  }
+}
+window.saveReanalyzedFields = saveReanalyzedFields;
+
+// Restaura os botões originais do modal de campos extras (Salvar sem extras / Salvar com extras)
+function restoreExtraFieldsModalButtons() {
+  const btnRow = document.querySelector('#extraFieldsModal .btn-row');
+  if (btnRow) {
+    btnRow.innerHTML = `
+      <button class="btn btn-secondary" onclick="skipExtraFields()">Salvar sem extras</button>
+      <button class="btn" onclick="saveDocumentWithExtras()">💾 Salvar com extras</button>
+    `;
+  }
+}
+
+// ========== EDITAR CAMPOS EXTRAS DE UM DOCUMENTO JÁ SALVO ==========
+function editExtraFields(docId) {
+  const d = currentDocs.find(x => x.id === docId);
+  if (!d) return;
+
+  const folder = d.customFolder ? getCustomFolders().find(f => f.id === d.customFolder) : null;
+  if (!folder) {
+    showToast('Pasta não encontrada', 'error');
+    return;
+  }
+
+  // Reutiliza o modal: marca o doc como sendo re-analisado e abre com os valores atuais
+  reanalyzingDoc = d;
+  document.getElementById('extraFieldsTitle').innerHTML = `✏️ Editar campos: ${escapeHtml(folder.icon)} ${escapeHtml(folder.name)}`;
+  document.getElementById('extraFieldsDescription').innerHTML =
+    `<strong>Edite os campos abaixo.</strong> Você pode mudar qualquer valor antes de salvar.`;
+
+  const container = document.getElementById('extraFieldsContent');
+  const fields = d.extraFields || {};
+  const keys = Object.keys(fields);
+
+  if (keys.length === 0) {
+    container.innerHTML = `<div style="text-align:center;color:#666;font-size:13px;padding:14px;">Nenhum campo extra ainda. Toque em "🔄 Re-analisar" pra extrair.</div>`;
+  } else {
+    container.innerHTML = keys.map(key => {
+      const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const rawVal = fields[key] === null || fields[key] === undefined ? '' : String(fields[key]);
+      const val = formatValueSmart(rawVal);
+      const safeKey = escapeHtml(key);
+      const safeVal = escapeHtml(val);
+      return `
+        <div class="form-group">
+          <label class="form-label">${escapeHtml(label)}</label>
+          <input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Botões iguais aos do reanalyze (cancelar + salvar)
+  const btnRow = document.querySelector('#extraFieldsModal .btn-row');
+  if (btnRow) {
+    btnRow.innerHTML = `
+      <button class="btn btn-secondary" onclick="closeModal('extraFieldsModal')">Cancelar</button>
+      <button class="btn" onclick="saveReanalyzedFields()">💾 Salvar mudanças</button>
+    `;
+  }
+
+  openModal('extraFieldsModal');
+}
+window.editExtraFields = editExtraFields;
 
 // ========== CARREGAR DOCS ==========
 async function loadDocuments() {
@@ -2705,6 +3343,19 @@ function renderDetailPhoto(d) {
   const container = document.getElementById('detailPhotoContainer');
   if (!container) return;
 
+  // Documento vindo do scanner QR (sem foto)
+  if (d.fromQrScan && !d.photoUrl) {
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#E8F5E9 0%,#C8E6C9 100%);border:2px solid #A5D6A7;border-radius:12px;padding:20px;margin-bottom:14px;">
+        <div style="font-size:42px;flex-shrink:0;">📱</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+          <strong style="color:#1B5E20;font-size:15px;">Boleto via QR Code</strong>
+          <span style="color:#2E7D32;font-size:12px;">Lido com a câmera — sem foto anexa</span>
+        </div>
+      </div>`;
+    return;
+  }
+
   if (isPdfDocument(d)) {
     // Renderiza placeholder pra PDF — abre no Safari/visualizador nativo
     const url = d.photoUrl || '';
@@ -2720,9 +3371,38 @@ function renderDetailPhoto(d) {
   } else {
     // Renderiza imagem normal (com zoom no lightbox)
     const photoSrc = d.productPhoto || d.photoUrl || '';
-    container.innerHTML = `<img id="detailPhoto" class="detail-photo" src="${escapeHtml(photoSrc)}" alt="" onclick="openLightbox(this.src)">`;
+    if (photoSrc) {
+      container.innerHTML = `<img id="detailPhoto" class="detail-photo" src="${escapeHtml(photoSrc)}" alt="" onclick="openLightbox(this.src)">`;
+    } else {
+      container.innerHTML = '';
+    }
   }
 }
+
+// Abre o boleto em tela cheia pra usuário escanear o QR Code com câmera do banco
+function showQrCodeForScanning(docId) {
+  const d = currentDocs.find(x => x.id === docId);
+  if (!d) {
+    showToast('Documento não encontrado', 'error');
+    return;
+  }
+  if (!d.photoUrl) {
+    showToast('Arquivo do boleto não encontrado', 'error');
+    return;
+  }
+
+  // Se for PDF, abre no Safari (tem zoom nativo melhor)
+  if (isPdfDocument(d)) {
+    showToast('Abrindo o PDF — use o zoom do Safari pra deixar o QR Code grande', 'info');
+    window.open(d.photoUrl, '_blank');
+    return;
+  }
+
+  // Se for imagem, abre no lightbox (tela cheia preta)
+  showToast('Aponta a câmera do app do seu banco pra essa tela', 'info');
+  openLightbox(d.photoUrl);
+}
+window.showQrCodeForScanning = showQrCodeForScanning;
 
 // Abre o PDF em uma nova aba/Safari (usa o visualizador nativo do iOS)
 function openPdfExternal(url) {
@@ -2780,15 +3460,32 @@ function showDocDetail(id) {
     </div>`;
   }
 
-  // PIX QR Code (BR Code)
+  // PIX QR Code (decodificado da imagem do QR Code do boleto)
   if (d.pix_qrcode) {
     const pix = String(d.pix_qrcode);
     // Mostra só os primeiros caracteres pra não ocupar muito espaço
     const preview = pix.length > 80 ? pix.substring(0, 80) + '...' : pix;
+    // Usa data-attribute pra evitar bug com caracteres especiais
+    const pixB64 = btoa(unescape(encodeURIComponent(pix)));
     html += `<div class="detail-row" style="flex-direction:column;align-items:flex-start;background:#E8F5E9;padding:10px;border-radius:8px;margin:6px 0;">
-      <span class="detail-label" style="margin-bottom:4px;color:#2E7D32;">📱 PIX Copia e Cola</span>
+      <span class="detail-label" style="margin-bottom:4px;color:#2E7D32;">📱 PIX Copia e Cola <span style="font-size:10px;background:#2E7D32;color:white;padding:2px 6px;border-radius:4px;margin-left:4px;font-weight:600;">✓ LIDO DO QR</span></span>
       <span class="detail-value" style="text-align:left;max-width:100%;font-family:monospace;font-size:11px;word-break:break-all;line-height:1.4;color:#558B5C;">${escapeHtml(preview)}</span>
-      <button class="btn-link" style="margin-top:6px;padding:6px 10px;background:#2E7D32;color:white;" onclick="copyToClipboard('${pix.replace(/'/g, '&#39;')}', 'PIX')">📋 Copiar PIX</button>
+      <button class="btn-link" data-pix-b64="${pixB64}" style="margin-top:6px;padding:8px 14px;background:#2E7D32;color:white;font-weight:600;" onclick="copyPixFromBase64(this)">📋 Copiar PIX pra pagar</button>
+    </div>`;
+  }
+
+  // BOTÃO MOSTRAR QR CODE: aparece se boleto TEM QR (mesmo que o código não tenha sido extraído)
+  // É a forma MAIS segura de pagar: você abre o app do banco e escaneia o QR direto da tela
+  if (d.tipo === 'boleto' && (d.tem_qrcode === true || d.pix_qrcode)) {
+    html += `<div class="detail-row" style="flex-direction:column;align-items:flex-start;background:#E3F2FD;padding:10px;border-radius:8px;margin:6px 0;">
+      <span class="detail-label" style="margin-bottom:4px;color:#1565C0;">📱 Pagar via QR Code (jeito mais fácil)</span>
+      <div style="font-size:12px;color:#1565C0;line-height:1.5;margin-bottom:8px;">
+        1️⃣ Abre o app do seu banco<br>
+        2️⃣ Vai em PIX → "Ler QR Code" / "Pagar com QR"<br>
+        3️⃣ Aponta a câmera pra tela aqui embaixo<br>
+        4️⃣ Confere o valor e paga ✅
+      </div>
+      <button class="btn" style="background:#1565C0;color:white;width:100%;padding:10px;" onclick="showQrCodeForScanning('${d.id}')">📱 Mostrar QR Code em tela cheia</button>
     </div>`;
   }
 
@@ -2800,19 +3497,49 @@ function showDocDetail(id) {
     : '<span style="color:#AAA;">— Nenhuma —</span>';
   html += `<div class="detail-row"><span class="detail-label">Pasta personalizada</span><span class="detail-value">${folderText}</span></div>`;
 
-  // Campos extras (pasta inteligente)
-  if (d.extraFields && typeof d.extraFields === 'object') {
-    const keys = Object.keys(d.extraFields).filter(k => d.extraFields[k] !== null && d.extraFields[k] !== '');
-    if (keys.length > 0) {
-      html += `<div style="margin-top:14px;background:#E3F2FD;border:1px solid #BBDEFB;border-radius:8px;padding:10px;">
-        <div style="font-size:11px;color:#1565C0;font-weight:600;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px;">🧠 Campos extras (pasta inteligente)</div>`;
+  // 🧠 Seção de PASTA INTELIGENTE — aparece sempre que estiver em uma pasta inteligente
+  const isInSmartFolder = currentFolder && currentFolder.description && currentFolder.description.trim().length > 0;
+  if (isInSmartFolder) {
+    const hasFields = d.extraFields && typeof d.extraFields === 'object'
+      && Object.keys(d.extraFields).filter(k => d.extraFields[k] !== null && d.extraFields[k] !== '').length > 0;
+
+    html += `<div style="margin-top:14px;background:#E3F2FD;border:1px solid #BBDEFB;border-radius:12px;padding:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+        <div style="font-size:11px;color:#1565C0;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🧠 Campos da pasta inteligente</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${hasFields ? `<button class="btn-link" style="padding:4px 10px;background:#BBDEFB;color:#0D47A1;font-size:11px;font-weight:600;border-radius:6px;" onclick="editExtraFields('${d.id}')">✏️ Editar</button>` : ''}
+          <button class="btn-link" style="padding:4px 10px;background:#FF6B35;color:white;font-size:11px;font-weight:600;border-radius:6px;" onclick="reanalyzeWithSmartFolder('${d.id}')">🔄 Re-analisar</button>
+        </div>
+      </div>`;
+
+    if (hasFields) {
+      const keys = Object.keys(d.extraFields).filter(k => d.extraFields[k] !== null && d.extraFields[k] !== '');
       keys.forEach(k => {
         const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        const val = d.extraFields[k];
-        html += `<div class="detail-row" style="border-color:#BBDEFB;"><span class="detail-label">${escapeHtml(label)}</span><span class="detail-value">${escapeHtml(String(val))}</span></div>`;
+        const rawVal = String(d.extraFields[k]);
+        // Formata datas ISO automaticamente pra DD/MM/AAAA
+        const val = formatValueSmart(rawVal);
+        // Se valor for muito longo (>30 chars) OU contém URL/código sem espaços, mostra empilhado verticalmente
+        const isLongValue = val.length > 30 || /https?:\/\//.test(val) || /^[^\s]{25,}$/.test(val);
+
+        if (isLongValue) {
+          // Layout vertical: label em cima, valor embaixo (em fonte monoespaçada se for código)
+          const isCode = /^[A-Za-z0-9.\-_]+$/.test(val) || val.length > 50;
+          html += `<div class="detail-row" style="border-color:#BBDEFB;flex-direction:column;align-items:flex-start;gap:4px;padding:8px 0;">
+            <span class="detail-label" style="text-align:left;">${escapeHtml(label)}</span>
+            <span class="detail-value" style="text-align:left;max-width:100%;word-break:break-all;overflow-wrap:break-word;${isCode ? 'font-family:monospace;font-size:11px;background:#F5F9FF;padding:6px 8px;border-radius:4px;width:100%;' : 'white-space:normal;'}">${escapeHtml(val)}</span>
+          </div>`;
+        } else {
+          // Layout horizontal padrão (valor curto)
+          html += `<div class="detail-row" style="border-color:#BBDEFB;"><span class="detail-label">${escapeHtml(label)}</span><span class="detail-value" style="word-break:break-word;overflow-wrap:anywhere;">${escapeHtml(val)}</span></div>`;
+        }
       });
-      html += `</div>`;
+    } else {
+      html += `<div style="color:#1565C0;font-size:12px;text-align:center;padding:8px 0;">
+        Ainda não há campos extras extraídos.<br>Toque em "🔄 Re-analisar" pra extrair agora.
+      </div>`;
     }
+    html += `</div>`;
   }
 
   document.getElementById('detailContent').innerHTML = html;
@@ -2838,6 +3565,24 @@ function showDocDetail(id) {
 window.showDocDetail = showDocDetail;
 
 // ========== COPIAR PRO CLIPBOARD ==========
+// Copia PIX (BR Code) lendo de data-attribute em base64 (resolve bug com caracteres especiais)
+function copyPixFromBase64(buttonEl) {
+  try {
+    const b64 = buttonEl.getAttribute('data-pix-b64');
+    if (!b64) {
+      showToast('PIX não encontrado', 'error');
+      return;
+    }
+    // Decodifica base64 → string original
+    const pix = decodeURIComponent(escape(atob(b64)));
+    copyToClipboard(pix, 'PIX');
+  } catch (err) {
+    console.error('Erro ao decodificar PIX:', err);
+    showToast('Erro ao copiar PIX', 'error');
+  }
+}
+window.copyPixFromBase64 = copyPixFromBase64;
+
 async function copyToClipboard(text, label) {
   label = label || 'Texto';
   try {
@@ -3466,6 +4211,49 @@ function formatDate(s) {
   if (!s) return '';
   const parts = s.split('-');
   if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return s;
+}
+
+// Detecta se uma string é uma data no formato ISO (YYYY-MM-DD) e converte pra DD/MM/AAAA.
+// Suporta também ISO com hora (YYYY-MM-DDTHH:MM:SS) — pega só a parte da data.
+// Se não for data, retorna o valor original sem mudanças.
+function formatValueSmart(val) {
+  if (val === null || val === undefined) return '';
+  const s = String(val).trim();
+  if (!s) return '';
+  // Pattern: começo da string YYYY-MM-DD (com ou sem hora depois)
+  const isoDateMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+  if (isoDateMatch) {
+    const [, year, month, day] = isoDateMatch;
+    // Valida que mês 01-12 e dia 01-31 (proteção contra string que parece data mas não é)
+    const m = parseInt(month, 10);
+    const d = parseInt(day, 10);
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      return `${day}/${month}/${year}`;
+    }
+  }
+  return s;
+}
+
+// Inverso de formatValueSmart: detecta DD/MM/AAAA e converte de volta pra YYYY-MM-DD.
+// Usado quando o usuário salva campos editados (preserva o formato ISO no banco).
+function parseValueSmart(val) {
+  if (val === null || val === undefined) return val;
+  const s = String(val).trim();
+  if (!s) return s;
+  // Pattern: DD/MM/AAAA ou DD/MM/AA
+  const brDateMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (brDateMatch) {
+    const [, day, month, year] = brDateMatch;
+    const d = parseInt(day, 10);
+    const m = parseInt(month, 10);
+    let y = parseInt(year, 10);
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      // Se ano com 2 dígitos, assume 20XX
+      if (y < 100) y = y < 50 ? 2000 + y : 1900 + y;
+      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+  }
   return s;
 }
 
