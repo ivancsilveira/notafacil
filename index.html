@@ -582,7 +582,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.7 · 10/05/2026
+    Versão 1.0.10 · 10/05/2026
   </div>
 </div>
 
@@ -592,7 +592,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.7</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.10</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -739,10 +739,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.7</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.10</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.7 - recebe arquivos compartilhados de outros apps)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.10 - chave de acesso da NF-e + mover documento entre pastas)</span>
           </p>
         </div>
       </div>
@@ -811,6 +811,12 @@
       <input type="date" id="reviewDate" class="form-input">
     </div>
 
+    <div class="form-group" id="chaveAcessoGroup" style="display:none;">
+      <label class="form-label">Chave de acesso (NF-e/NFC-e) <span style="font-weight:400;color:#888;font-size:11px;">— opcional</span></label>
+      <input type="text" id="reviewChaveAcesso" class="form-input" placeholder="44 dígitos da nota fiscal eletrônica" maxlength="50" inputmode="numeric">
+      <p style="font-size:11px;color:#888;margin-top:4px;">Esse código vem no rodapé ou perto do código de barras da NF-e/NFC-e. Útil pra consultar no site da SEFAZ.</p>
+    </div>
+
     <div class="form-group" id="warrantyGroup">
       <label class="form-label">Garantia (meses)</label>
       <select id="reviewWarranty" class="form-select">
@@ -829,7 +835,13 @@
       <select id="reviewCustomFolder" class="form-select">
         <option value="">— Nenhuma —</option>
       </select>
-      <p style="font-size:11px;color:#888;margin-top:4px;">Categoriza além do tipo. Crie novas pastas em "Pastas".</p>
+      <p id="reviewCustomFolderHint" style="font-size:11px;color:#888;margin-top:4px;">Categoriza além do tipo. Crie novas pastas em "Pastas".</p>
+
+      <!-- Botão destacado pra criar pasta na hora (só aparece se tipo=outros) -->
+      <div id="reviewCreateFolderHint" style="display:none;margin-top:10px;padding:12px;background:#FFF3E8;border:1px dashed #FFD4B8;border-radius:10px;">
+        <div style="font-size:13px;color:#8B4500;margin-bottom:8px;">💡 <strong>Não identifiquei o tipo desse documento.</strong><br>Quer criar uma pasta personalizada pra ele?</div>
+        <button type="button" class="btn btn-small" style="background:#FF6B35;color:white;width:auto;display:inline-flex;" onclick="openCreateFolderFromReview()">📁 Criar nova pasta</button>
+      </div>
     </div>
 
     <div class="btn-row" style="margin-top:16px;">
@@ -846,9 +858,41 @@
     <div class="modal-title" id="detailTitle">Documento</div>
     <img id="detailPhoto" class="detail-photo" alt="" onclick="openLightbox(this.src)">
     <div id="detailContent"></div>
+    <div class="btn-row" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-secondary" onclick="openMoveModal()" style="flex:1;min-width:0;">📁 Mover</button>
+      <button class="btn btn-secondary" onclick="deleteCurrentDoc()" style="background:#FCE5E5;color:#8B1F1F;border-color:#F5C0C0;flex:1;min-width:0;">🗑️ Excluir</button>
+      <button class="btn" id="detailActionBtn" style="flex:2;min-width:0;">📅 Agendar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MOVER DOCUMENTO PRA OUTRA PASTA -->
+<div id="moveModal" class="modal-overlay" style="z-index:250;" onclick="if(event.target===this)closeModal('moveModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('moveModal')">×</button>
+    <div class="modal-title">📁 Mover para...</div>
+    <p style="color:#666;font-size:13px;margin-bottom:14px;">Escolha a pasta de destino. Esse documento será movido pra lá.</p>
+
+    <div class="form-group">
+      <label class="form-label">Tipo de documento</label>
+      <select id="moveTipo" class="form-select">
+        <option value="nota_fiscal">🧾 Nota Fiscal</option>
+        <option value="recibo">📄 Recibo</option>
+        <option value="boleto">🏷️ Boleto</option>
+        <option value="outros">📁 Outros / Revisar</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Pasta personalizada (opcional)</label>
+      <select id="moveCustomFolder" class="form-select">
+        <option value="">— Nenhuma —</option>
+      </select>
+    </div>
+
     <div class="btn-row" style="margin-top:16px;">
-      <button class="btn btn-secondary" onclick="deleteCurrentDoc()" style="background:#FCE5E5;color:#8B1F1F;border-color:#F5C0C0;">🗑️ Excluir</button>
-      <button class="btn" id="detailActionBtn">📅 Agendar</button>
+      <button class="btn btn-secondary" onclick="closeModal('moveModal')">Cancelar</button>
+      <button class="btn" onclick="confirmMove()">💾 Mover</button>
     </div>
   </div>
 </div>
@@ -860,7 +904,7 @@
 </div>
 
 <!-- MODAL: CRIAR PASTA PERSONALIZADA -->
-<div id="createFolderModal" class="modal-overlay" onclick="if(event.target===this)closeModal('createFolderModal')">
+<div id="createFolderModal" class="modal-overlay" style="z-index:250;" onclick="if(event.target===this)closeModal('createFolderModal')">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('createFolderModal')">×</button>
     <div class="modal-title">📁 Nova pasta</div>
@@ -888,7 +932,7 @@
 <div id="photoLightbox" class="lightbox" onclick="closeLightbox(event)">
   <button class="lightbox-close" onclick="closeLightbox()">×</button>
   <img id="lightboxImg" class="lightbox-img" alt="">
-  <div class="lightbox-hint" id="lightboxHint">Pinça pra dar zoom · 2 toques pra ampliar · arraste pra mover</div>
+  <div class="lightbox-hint" id="lightboxHint">Pinça pra ampliar onde você quer · 2 toques pra zoom · arraste pra explorar</div>
 </div>
 
 <!-- TOAST -->
@@ -1279,12 +1323,15 @@ async function analyzeWithClaude(base64, mediaType) {
   "produto": "descrição do produto principal (só pra nota fiscal, senão null)",
   "loja": "nome da loja/estabelecimento/empresa",
   "cnpj": "CNPJ se visível, senão null",
+  "chave_acesso": "chave de acesso da NF-e/NFC-e (44 dígitos, só números, sem espaços) se visível, senão null",
   "valor": número (apenas o valor, sem R$),
   "data": "YYYY-MM-DD" (data da compra/emissão),
   "vencimento": "YYYY-MM-DD" (apenas pra boletos, senão null),
   "garantia_sugerida_meses": número (sugestão pelo CDC: 90 dias=3, durável=12),
   "resumo": "frase curta descrevendo o documento"
 }
+
+Sobre "chave_acesso": notas fiscais eletrônicas brasileiras (NF-e e NFC-e) têm um código de 44 dígitos que costuma aparecer abaixo de um código de barras ou QR Code. Extraia esse código removendo qualquer espaço ou separador, só números. Se não houver, use null.
 
 Se não conseguir identificar algum campo, use null. Para "tipo": nota_fiscal é cupom/NF de produtos, recibo é prestação de serviço, boleto é cobrança bancária. Se for foto borrada ou ilegível, marca tipo="outros" e resumo="Documento ilegível".`;
 
@@ -1380,20 +1427,37 @@ function openReviewModal() {
   document.getElementById('reviewStore').value = a.loja || '';
   document.getElementById('reviewValue').value = a.valor || '';
   document.getElementById('reviewDate').value = a.data || new Date().toISOString().split('T')[0];
+  document.getElementById('reviewChaveAcesso').value = a.chave_acesso || '';
 
   // Garantia: só mostra pra nota fiscal, e sugere
   toggleWarrantyField();
   document.getElementById('reviewWarranty').value = a.garantia_sugerida_meses || '';
 
+  // Chave de acesso: só mostra pra nota fiscal
+  toggleChaveAcessoField();
+
   // Popular dropdown de pastas personalizadas
   populateCustomFolderDropdown();
 
-  document.getElementById('reviewType').addEventListener('change', toggleWarrantyField);
+  // Mostrar/esconder sugestão de criar pasta (só pra "outros")
+  toggleCreateFolderHint();
+
+  // Event listeners para mudanças de tipo (uma vez só)
+  const typeSelect = document.getElementById('reviewType');
+  typeSelect.removeEventListener('change', onReviewTypeChange); // remove duplicatas
+  typeSelect.addEventListener('change', onReviewTypeChange);
 
   openModal('reviewModal');
 }
 
-function populateCustomFolderDropdown() {
+// Quando o usuário mudar o tipo no dropdown, atualiza tudo
+function onReviewTypeChange() {
+  toggleWarrantyField();
+  toggleChaveAcessoField();
+  toggleCreateFolderHint();
+}
+
+function populateCustomFolderDropdown(selectedId) {
   const select = document.getElementById('reviewCustomFolder');
   if (!select) return;
   const folders = getCustomFolders();
@@ -1403,14 +1467,40 @@ function populateCustomFolderDropdown() {
     const opt = document.createElement('option');
     opt.value = f.id;
     opt.textContent = `${f.icon} ${f.name}`;
+    if (selectedId && f.id === selectedId) opt.selected = true;
     select.appendChild(opt);
   });
+  if (selectedId) select.value = selectedId;
 }
 
 function toggleWarrantyField() {
   const tipo = document.getElementById('reviewType').value;
   document.getElementById('warrantyGroup').style.display = (tipo === 'nota_fiscal') ? 'block' : 'none';
 }
+
+function toggleChaveAcessoField() {
+  const tipo = document.getElementById('reviewType').value;
+  const group = document.getElementById('chaveAcessoGroup');
+  if (group) group.style.display = (tipo === 'nota_fiscal') ? 'block' : 'none';
+}
+
+// Mostra a sugestão de "criar pasta nova" quando Claude não identificou (tipo=outros)
+function toggleCreateFolderHint() {
+  const tipo = document.getElementById('reviewType').value;
+  const hint = document.getElementById('reviewCreateFolderHint');
+  if (!hint) return;
+  hint.style.display = (tipo === 'outros') ? 'block' : 'none';
+}
+
+// Quando o usuário clica em "Criar nova pasta" de dentro do modal de revisão
+function openCreateFolderFromReview() {
+  // Marca que estamos vindo do modal de revisão (pra pré-selecionar depois)
+  window._createFolderFromReview = true;
+  // Abre o modal de criar pasta SEM fechar o modal de revisão
+  // (vão ficar empilhados; o de criar pasta tem z-index maior por causa da ordem no DOM)
+  openCreateFolderModal();
+}
+window.openCreateFolderFromReview = openCreateFolderFromReview;
 
 // ========== SALVAR DOCUMENTO ==========
 async function saveDocument() {
@@ -1423,6 +1513,9 @@ async function saveDocument() {
     const garantiaMeses = parseInt(document.getElementById('reviewWarranty').value) || null;
     const dataCompra = document.getElementById('reviewDate').value;
     const customFolderId = document.getElementById('reviewCustomFolder').value || null;
+    // Chave de acesso: limpa pra ter só dígitos
+    const chaveAcessoRaw = document.getElementById('reviewChaveAcesso').value || '';
+    const chaveAcesso = chaveAcessoRaw.replace(/\D/g, '') || null;
 
     const docData = {
       tipo: tipo,
@@ -1431,6 +1524,7 @@ async function saveDocument() {
       valor: parseFloat(document.getElementById('reviewValue').value) || 0,
       data: dataCompra,
       cnpj: pendingDoc.analysis.cnpj || null,
+      chave_acesso: chaveAcesso,
       vencimento: pendingDoc.analysis.vencimento || null,
       garantia_meses: garantiaMeses,
       garantia_vence: null,
@@ -1629,8 +1723,17 @@ function saveNewFolder() {
   saveCustomFolders(folders);
 
   closeModal('createFolderModal');
-  showToast('Pasta criada! ✅', 'success');
+  showToast(`Pasta "${name}" criada! ✅`, 'success');
   renderCustomFoldersList();
+
+  // Se veio do fluxo de "Revisar documento", pré-selecciona a nova pasta no dropdown
+  if (window._createFolderFromReview) {
+    window._createFolderFromReview = false;
+    populateCustomFolderDropdown(newFolder.id);
+    // Esconde o "hint" porque agora tem uma pasta selecionada
+    const hint = document.getElementById('reviewCreateFolderHint');
+    if (hint) hint.style.display = 'none';
+  }
 }
 window.saveNewFolder = saveNewFolder;
 
@@ -1808,21 +1911,33 @@ function showDocDetail(id) {
     html += `<div class="detail-row"><span class="detail-label">Garantia vence em</span><span class="detail-value" style="color:${cor};">${formatDate(d.garantia_vence)} (${days < 0 ? 'vencida há ' + Math.abs(days) + ' dias' : 'em ' + days + ' dias'})</span></div>`;
   }
 
+  // Chave de acesso NF-e/NFC-e (44 dígitos)
+  if (d.chave_acesso) {
+    const chave = String(d.chave_acesso).replace(/\D/g, '');
+    // Formata como blocos de 4 dígitos pra ficar legível: XXXX XXXX XXXX ...
+    const chaveFmt = chave.replace(/(.{4})/g, '$1 ').trim();
+    html += `<div class="detail-row" style="flex-direction:column;align-items:flex-start;">
+      <span class="detail-label" style="margin-bottom:4px;">Chave de acesso (NF-e)</span>
+      <span class="detail-value" style="text-align:left;max-width:100%;font-family:monospace;font-size:12px;word-break:break-all;line-height:1.4;">${escapeHtml(chaveFmt)}</span>
+      <button class="btn-link" style="margin-top:6px;padding:6px 10px;background:#FFF3E8;" onclick="copyChaveAcesso('${chave}')">📋 Copiar chave</button>
+    </div>`;
+  }
+
   // Pasta personalizada
   const customFolders = getCustomFolders();
   const currentFolder = d.customFolder ? customFolders.find(f => f.id === d.customFolder) : null;
   const folderText = currentFolder
     ? `${currentFolder.icon} ${escapeHtml(currentFolder.name)}`
     : '<span style="color:#AAA;">— Nenhuma —</span>';
-  html += `<div class="detail-row"><span class="detail-label">Pasta personalizada</span><span class="detail-value">${folderText} <button class="btn-link" style="margin-left:6px;" onclick="changeDocFolder('${d.id}')">alterar</button></span></div>`;
+  html += `<div class="detail-row"><span class="detail-label">Pasta personalizada</span><span class="detail-value">${folderText}</span></div>`;
 
   document.getElementById('detailContent').innerHTML = html;
 
-  // Botão de ação: agendar (se tem garantia) ou ver no maps (cnpj)
+  // Botão de ação: agendar (se tem garantia)
   const actionBtn = document.getElementById('detailActionBtn');
   if (d.garantia_vence) {
     actionBtn.style.display = 'flex';
-    actionBtn.innerHTML = '📅 Agendar aviso no Google Agenda';
+    actionBtn.innerHTML = getCalendarButtonLabel();
     actionBtn.onclick = () => createCalendarEvent(d);
   } else {
     actionBtn.style.display = 'none';
@@ -1832,58 +1947,114 @@ function showDocDetail(id) {
 }
 window.showDocDetail = showDocDetail;
 
-// Permite o usuário mudar a pasta personalizada de um documento existente
-async function changeDocFolder(docId) {
-  const d = currentDocs.find(x => x.id === docId);
-  if (!d) return;
+// ========== COPIAR CHAVE DE ACESSO ==========
+async function copyChaveAcesso(chave) {
+  try {
+    await navigator.clipboard.writeText(chave);
+    showToast('Chave copiada! 📋', 'success');
+  } catch (e) {
+    // Fallback pra navegadores antigos
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = chave;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Chave copiada! 📋', 'success');
+    } catch (err) {
+      showToast('Não consegui copiar. Toca e segura no texto.', 'error');
+    }
+  }
+}
+window.copyChaveAcesso = copyChaveAcesso;
 
+// ========== MOVER DOCUMENTO ==========
+function openMoveModal() {
+  if (!currentDetailDoc) return;
+
+  // Preenche dropdowns com valores atuais
+  document.getElementById('moveTipo').value = currentDetailDoc.tipo || 'outros';
+
+  // Popular dropdown de pastas customizadas
+  const select = document.getElementById('moveCustomFolder');
   const folders = getCustomFolders();
-  let optionsText = '0 - Remover (nenhuma)\n';
-  folders.forEach((f, i) => { optionsText += `${i+1} - ${f.icon} ${f.name}\n`; });
-  optionsText += `\nDigite o número da pasta (ou "n" pra criar nova):`;
+  select.innerHTML = '<option value="">— Nenhuma —</option>';
+  folders.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.id;
+    opt.textContent = `${f.icon} ${f.name}`;
+    select.appendChild(opt);
+  });
+  select.value = currentDetailDoc.customFolder || '';
 
-  const choice = prompt(optionsText, '0');
-  if (choice === null) return; // cancelou
+  openModal('moveModal');
+}
+window.openMoveModal = openMoveModal;
 
-  let newFolderId = null;
+async function confirmMove() {
+  if (!currentDetailDoc) return;
 
-  if (choice.toLowerCase() === 'n') {
-    closeModal('detailModal');
-    openCreateFolderModal();
-    return;
-  }
+  const newTipo = document.getElementById('moveTipo').value;
+  const newCustomFolder = document.getElementById('moveCustomFolder').value || null;
 
-  const idx = parseInt(choice);
-  if (isNaN(idx)) {
-    showToast('Resposta inválida', 'error');
-    return;
-  }
-  if (idx === 0) {
-    newFolderId = null;
-  } else if (idx >= 1 && idx <= folders.length) {
-    newFolderId = folders[idx - 1].id;
-  } else {
-    showToast('Número inválido', 'error');
+  // Se nada mudou, só fecha
+  if (newTipo === currentDetailDoc.tipo && newCustomFolder === (currentDetailDoc.customFolder || null)) {
+    closeModal('moveModal');
+    showToast('Nenhuma mudança feita', 'info');
     return;
   }
 
   try {
-    showLoading('Atualizando pasta...');
+    showLoading('Movendo documento...');
     const { doc, updateDoc } = window.fbHelpers;
-    const docRef = doc(window.fbDb, 'documentos', docId);
-    await updateDoc(docRef, { customFolder: newFolderId });
-    d.customFolder = newFolderId;
+    const docRef = doc(window.fbDb, 'documentos', currentDetailDoc.id);
+
+    const updates = {
+      tipo: newTipo,
+      customFolder: newCustomFolder
+    };
+
+    // Se mudou de nota fiscal pra outra coisa, limpa dados de garantia
+    if (currentDetailDoc.tipo === 'nota_fiscal' && newTipo !== 'nota_fiscal') {
+      updates.garantia_meses = null;
+      updates.garantia_vence = null;
+    }
+
+    await updateDoc(docRef, updates);
+
+    // Atualiza estado local
+    currentDetailDoc.tipo = newTipo;
+    currentDetailDoc.customFolder = newCustomFolder;
+    if (updates.garantia_meses === null) {
+      currentDetailDoc.garantia_meses = null;
+      currentDetailDoc.garantia_vence = null;
+    }
+
     hideLoading();
-    showToast('Pasta atualizada ✅', 'success');
+    closeModal('moveModal');
+    showToast('Documento movido ✅', 'success');
+
     // Refresh tela de detalhes e contadores
-    showDocDetail(docId);
-    renderCustomFoldersList();
+    showDocDetail(currentDetailDoc.id);
+    updateFolderCounts();
+    // Se estava numa pasta aberta, recarrega ela
+    if (currentFolderType) {
+      if (currentFolderType.startsWith('custom:')) {
+        const customId = currentFolderType.substring(7);
+        openCustomFolder(customId);
+      } else {
+        openFolder(currentFolderType);
+      }
+    }
   } catch (err) {
     hideLoading();
-    showToast('Erro ao atualizar: ' + err.message, 'error');
+    showToast('Erro ao mover: ' + err.message, 'error');
   }
 }
-window.changeDocFolder = changeDocFolder;
+window.confirmMove = confirmMove;
 
 
 async function deleteCurrentDoc() {
@@ -1917,7 +2088,121 @@ async function deleteCurrentDoc() {
 window.deleteCurrentDoc = deleteCurrentDoc;
 
 // ========== GOOGLE AGENDA ==========
+// ========== CALENDÁRIO (detecta Apple vs Google automaticamente) ==========
+// iPhone/iPad/Mac → arquivo .ics (abre no Calendário da Apple)
+// Outros → URL do Google Agenda
+function isAppleDevice() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  if (/iPhone|iPad|iPod/i.test(ua)) return true;
+  if (/Mac/i.test(platform) && !('ontouchend' in document)) return true;
+  if (/Mac/i.test(platform) && navigator.maxTouchPoints > 1) return true; // iPad disfarçado
+  return false;
+}
+
+function getCalendarButtonLabel() {
+  return isAppleDevice()
+    ? '📅 Adicionar ao Calendário'
+    : '📅 Adicionar ao Google Agenda';
+}
+
 function createCalendarEvent(d) {
+  if (isAppleDevice()) {
+    createAppleCalendarEvent(d);
+  } else {
+    createGoogleCalendarEvent(d);
+  }
+}
+
+// Formata data pra padrão iCalendar (YYYYMMDD)
+function formatIcsDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${y}${m}${day}`;
+}
+
+// Escapa caracteres especiais no .ics (vírgula, ponto-e-vírgula, quebra de linha)
+function escapeIcs(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '');
+}
+
+// Gera arquivo .ics e abre no app de calendário do iPhone/Mac
+function createAppleCalendarEvent(d) {
+  const vence = new Date(d.garantia_vence);
+  const aviso = new Date(vence);
+  aviso.setDate(aviso.getDate() - 30);
+
+  const dtStart = formatIcsDate(aviso);
+  // Adiciona 1 dia ao fim porque eventos all-day no .ics têm DTEND exclusivo
+  const fim = new Date(aviso);
+  fim.setDate(fim.getDate() + 1);
+  const dtEnd = formatIcsDate(fim);
+
+  const uid = `notafacil-${d.id || Date.now()}@notafacil.app`;
+  const dtStamp = new Date().toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
+
+  const title = `⚠️ Garantia vence em 30 dias: ${d.produto || d.loja || 'documento'}`;
+  const description = [
+    `Produto: ${d.produto || '-'}`,
+    `Loja: ${d.loja || '-'}`,
+    `Valor: R$ ${formatMoney(d.valor || 0)}`,
+    `Data da compra: ${formatDate(d.data || '')}`,
+    `Garantia vence em: ${formatDate(d.garantia_vence)}`,
+    '',
+    `Nota fiscal: ${d.photoUrl || ''}`,
+    '',
+    'Criado pelo NotaFácil'
+  ].join('\n');
+
+  // Monta o conteúdo .ics. Cuidado com a formatação — RFC 5545 exige CRLF.
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//NotaFacil//pt-BR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${dtStamp}`,
+    `DTSTART;VALUE=DATE:${dtStart}`,
+    `DTEND;VALUE=DATE:${dtEnd}`,
+    `SUMMARY:${escapeIcs(title)}`,
+    `DESCRIPTION:${escapeIcs(description)}`,
+    'BEGIN:VALARM',
+    'TRIGGER:-PT9H',
+    'ACTION:DISPLAY',
+    `DESCRIPTION:${escapeIcs(title)}`,
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ];
+  const ics = lines.join('\r\n');
+
+  // Cria Blob com o conteúdo, baixa o arquivo
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `notafacil-garantia-${(d.produto || 'evento').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30)}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Limpa o blob URL depois de um tempinho
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  showToast('Calendário pronto! Toque no arquivo .ics que abriu pra adicionar.', 'success');
+}
+
+function createGoogleCalendarEvent(d) {
   // Cria URL do Google Calendar 30 dias antes do vencimento
   const vence = new Date(d.garantia_vence);
   const aviso = new Date(vence);
@@ -1983,18 +2268,35 @@ function daysUntil(dateStr) {
 }
 
 // ========== LIGHTBOX: VISUALIZAR FOTO EM TELA CHEIA COM ZOOM ==========
-let lightboxState = {
+// Funciona como o app Fotos do iPhone:
+// - Pinch amplia/reduz NO PONTO entre os dedos
+// - Arrastar move livremente quando zoomado
+// - Duplo toque amplia 2x onde você tocou; outro duplo toque volta ao normal
+const lightboxState = {
   scale: 1,
   tx: 0,
   ty: 0,
-  // tracking de gestos
+  // Touch
   pinchStartDist: 0,
   pinchStartScale: 1,
+  pinchCenterX: 0,
+  pinchCenterY: 0,
+  // Pan (touch e mouse)
+  panActive: false,
   panStartX: 0,
   panStartY: 0,
   panStartTx: 0,
   panStartTy: 0,
-  lastTapTime: 0
+  // Double tap
+  lastTapTime: 0,
+  lastTapX: 0,
+  lastTapY: 0,
+  // Tamanho natural da imagem
+  imgNaturalWidth: 0,
+  imgNaturalHeight: 0,
+  // Tamanho exibido (calculado no openLightbox)
+  imgDisplayWidth: 0,
+  imgDisplayHeight: 0
 };
 
 function openLightbox(src) {
@@ -2003,19 +2305,26 @@ function openLightbox(src) {
   const img = document.getElementById('lightboxImg');
   img.src = src;
 
-  // Reset zoom/pan
-  lightboxState.scale = 1;
-  lightboxState.tx = 0;
-  lightboxState.ty = 0;
-  updateLightboxTransform();
-
+  // Reset
+  resetLightboxZoom();
   lb.classList.add('active');
   document.body.style.overflow = 'hidden';
 
-  // Esconder a dica depois de 3 segundos
+  // Quando carregar, guarda dimensões pra calcular limites de pan
+  img.onload = () => {
+    lightboxState.imgNaturalWidth = img.naturalWidth;
+    lightboxState.imgNaturalHeight = img.naturalHeight;
+    // Calcula tamanho exibido (object-fit: contain)
+    const rect = img.getBoundingClientRect();
+    lightboxState.imgDisplayWidth = rect.width;
+    lightboxState.imgDisplayHeight = rect.height;
+  };
+
+  // Esconde a dica depois de 3 segundos
   const hint = document.getElementById('lightboxHint');
   if (hint) {
     hint.style.opacity = '1';
+    hint.style.transition = '';
     setTimeout(() => { hint.style.opacity = '0'; hint.style.transition = 'opacity 0.6s'; }, 3000);
   }
 }
@@ -2027,61 +2336,135 @@ function closeLightbox(event) {
   const lb = document.getElementById('photoLightbox');
   lb.classList.remove('active');
   document.body.style.overflow = '';
+  resetLightboxZoom();
 }
 window.closeLightbox = closeLightbox;
 
-function updateLightboxTransform() {
+function resetLightboxZoom() {
+  lightboxState.scale = 1;
+  lightboxState.tx = 0;
+  lightboxState.ty = 0;
+  updateLightboxTransform(true);
+}
+
+function updateLightboxTransform(animate) {
   const img = document.getElementById('lightboxImg');
   if (!img) return;
+  img.style.transition = animate ? 'transform 0.2s ease-out' : 'none';
   img.style.transform = `translate(${lightboxState.tx}px, ${lightboxState.ty}px) scale(${lightboxState.scale})`;
 }
 
+// Limita o pan: não deixa a imagem sair muito da tela.
+// Quando muito zoomado, deixa explorar livremente.
+// Quando pouco zoomado (perto de 1x), centraliza.
 function clampPan() {
-  // Não deixa a imagem sair muito longe da tela quando muito zoomada
-  const img = document.getElementById('lightboxImg');
-  if (!img) return;
-  const rect = img.getBoundingClientRect();
-  const maxX = Math.max(0, (rect.width - window.innerWidth) / 2 + 50);
-  const maxY = Math.max(0, (rect.height - window.innerHeight) / 2 + 50);
-  lightboxState.tx = Math.max(-maxX, Math.min(maxX, lightboxState.tx));
-  lightboxState.ty = Math.max(-maxY, Math.min(maxY, lightboxState.ty));
+  const w = lightboxState.imgDisplayWidth * lightboxState.scale;
+  const h = lightboxState.imgDisplayHeight * lightboxState.scale;
+  const winW = window.innerWidth;
+  const winH = window.innerHeight;
+
+  // Margem extra pequena pra UX suave
+  const slack = 0;
+
+  // Se a imagem zoomada é menor que a tela, centraliza
+  if (w <= winW) {
+    lightboxState.tx = 0;
+  } else {
+    const maxX = (w - winW) / 2 + slack;
+    lightboxState.tx = Math.max(-maxX, Math.min(maxX, lightboxState.tx));
+  }
+  if (h <= winH) {
+    lightboxState.ty = 0;
+  } else {
+    const maxY = (h - winH) / 2 + slack;
+    lightboxState.ty = Math.max(-maxY, Math.min(maxY, lightboxState.ty));
+  }
 }
 
-// Init dos event listeners do lightbox quando o DOM tá pronto
+// Aplica zoom em um ponto específico (centro do pinch ou onde tocou)
+// scaleNew = nova escala desejada
+// pointX, pointY = ponto na tela (coordenadas viewport) onde o zoom deve ancorar
+function zoomAtPoint(scaleNew, pointX, pointY) {
+  scaleNew = Math.max(1, Math.min(5, scaleNew));
+
+  const img = document.getElementById('lightboxImg');
+  if (!img) return;
+
+  // Centro atual da imagem na tela
+  const rect = img.getBoundingClientRect();
+  const imgCenterX = rect.left + rect.width / 2;
+  const imgCenterY = rect.top + rect.height / 2;
+
+  // Vetor do ponto até o centro da imagem (no espaço da tela)
+  // Esse vetor precisa ficar "no mesmo lugar visual" após o zoom
+  const offsetX = pointX - imgCenterX;
+  const offsetY = pointY - imgCenterY;
+
+  // Ratio de mudança: scaleNew / scaleAtual
+  const ratio = scaleNew / lightboxState.scale;
+
+  // Ajusta translação pra manter o ponto fixo:
+  // depois do zoom, o ponto (offsetX, offsetY) ficaria multiplicado por ratio.
+  // Pra compensar, subtraímos a diferença.
+  lightboxState.tx -= offsetX * (ratio - 1);
+  lightboxState.ty -= offsetY * (ratio - 1);
+  lightboxState.scale = scaleNew;
+
+  if (scaleNew === 1) {
+    lightboxState.tx = 0;
+    lightboxState.ty = 0;
+  } else {
+    clampPan();
+  }
+  updateLightboxTransform(false);
+}
+
 function initLightboxGestures() {
   const img = document.getElementById('lightboxImg');
   if (!img) return;
 
-  // --- Touch (celular): pinch-to-zoom e pan ---
+  // ====== TOUCH (celular/tablet) ======
   img.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
-      // Início do pinch
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      lightboxState.pinchStartDist = Math.sqrt(dx*dx + dy*dy);
+      // Início de pinch
+      e.preventDefault();
+      const t1 = e.touches[0], t2 = e.touches[1];
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      lightboxState.pinchStartDist = Math.sqrt(dx * dx + dy * dy);
       lightboxState.pinchStartScale = lightboxState.scale;
+      lightboxState.pinchCenterX = (t1.clientX + t2.clientX) / 2;
+      lightboxState.pinchCenterY = (t1.clientY + t2.clientY) / 2;
+      lightboxState.panActive = false;
     } else if (e.touches.length === 1) {
-      // Possível início de pan ou double-tap
+      const t = e.touches[0];
       const now = Date.now();
       const timeSinceLastTap = now - lightboxState.lastTapTime;
-      if (timeSinceLastTap < 350) {
-        // Double tap: alterna entre 1x e 2.5x
+      const dxTap = Math.abs(t.clientX - lightboxState.lastTapX);
+      const dyTap = Math.abs(t.clientY - lightboxState.lastTapY);
+
+      // Double tap: 2 toques rapidinhos perto um do outro
+      if (timeSinceLastTap < 320 && dxTap < 30 && dyTap < 30) {
         e.preventDefault();
         if (lightboxState.scale > 1.1) {
-          lightboxState.scale = 1;
-          lightboxState.tx = 0;
-          lightboxState.ty = 0;
+          resetLightboxZoom();
         } else {
-          lightboxState.scale = 2.5;
+          // Zoom 2.5x no ponto onde tocou
+          zoomAtPoint(2.5, t.clientX, t.clientY);
+          // E anima o transform pra dar feedback bonito
+          updateLightboxTransform(true);
         }
-        updateLightboxTransform();
         lightboxState.lastTapTime = 0;
-      } else {
-        lightboxState.lastTapTime = now;
+        return;
       }
-      // Pan setup
-      lightboxState.panStartX = e.touches[0].clientX;
-      lightboxState.panStartY = e.touches[0].clientY;
+      lightboxState.lastTapTime = now;
+      lightboxState.lastTapX = t.clientX;
+      lightboxState.lastTapY = t.clientY;
+
+      // Início de pan
+      lightboxState.panActive = true;
+      lightboxState.panStartX = t.clientX;
+      lightboxState.panStartY = t.clientY;
       lightboxState.panStartTx = lightboxState.tx;
       lightboxState.panStartTy = lightboxState.ty;
     }
@@ -2089,63 +2472,60 @@ function initLightboxGestures() {
 
   img.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2) {
-      // Pinch zoom
+      // Pinch — zoom no centro entre os dedos
       e.preventDefault();
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const dist = Math.sqrt(dx*dx + dy*dy);
+      const t1 = e.touches[0], t2 = e.touches[1];
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
       if (lightboxState.pinchStartDist > 0) {
-        let newScale = lightboxState.pinchStartScale * (dist / lightboxState.pinchStartDist);
-        newScale = Math.max(1, Math.min(5, newScale));
-        lightboxState.scale = newScale;
-        if (newScale === 1) {
-          lightboxState.tx = 0;
-          lightboxState.ty = 0;
-        }
-        updateLightboxTransform();
+        const newScale = lightboxState.pinchStartScale * (dist / lightboxState.pinchStartDist);
+        // Aplica zoom ancorado no centro inicial do pinch
+        zoomAtPoint(newScale, lightboxState.pinchCenterX, lightboxState.pinchCenterY);
       }
-    } else if (e.touches.length === 1 && lightboxState.scale > 1) {
-      // Pan (só se estiver zoomado)
+    } else if (e.touches.length === 1 && lightboxState.panActive && lightboxState.scale > 1) {
+      // Pan
       e.preventDefault();
-      const dx = e.touches[0].clientX - lightboxState.panStartX;
-      const dy = e.touches[0].clientY - lightboxState.panStartY;
+      const t = e.touches[0];
+      const dx = t.clientX - lightboxState.panStartX;
+      const dy = t.clientY - lightboxState.panStartY;
       lightboxState.tx = lightboxState.panStartTx + dx;
       lightboxState.ty = lightboxState.panStartTy + dy;
       clampPan();
-      updateLightboxTransform();
+      updateLightboxTransform(false);
     }
   }, { passive: false });
 
-  // --- Desktop (mouse): scroll wheel pra zoom + duplo clique ---
+  img.addEventListener('touchend', () => {
+    lightboxState.panActive = false;
+    lightboxState.pinchStartDist = 0;
+  });
+
+  // ====== MOUSE (desktop) ======
+  // Wheel = zoom no ponto onde está o cursor
   img.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.15 : 0.15;
-    let newScale = lightboxState.scale + delta;
-    newScale = Math.max(1, Math.min(5, newScale));
-    lightboxState.scale = newScale;
-    if (newScale === 1) {
-      lightboxState.tx = 0;
-      lightboxState.ty = 0;
-    }
-    updateLightboxTransform();
+    const delta = e.deltaY > 0 ? -0.18 : 0.18;
+    const newScale = lightboxState.scale + delta;
+    zoomAtPoint(newScale, e.clientX, e.clientY);
   }, { passive: false });
 
+  // Duplo clique = zoom 2.5x no ponto, ou reset se já tava com zoom
   img.addEventListener('dblclick', (e) => {
     e.preventDefault();
     if (lightboxState.scale > 1.1) {
-      lightboxState.scale = 1;
-      lightboxState.tx = 0;
-      lightboxState.ty = 0;
+      resetLightboxZoom();
     } else {
-      lightboxState.scale = 2.5;
+      zoomAtPoint(2.5, e.clientX, e.clientY);
+      updateLightboxTransform(true);
     }
-    updateLightboxTransform();
   });
 
-  // --- Desktop (mouse): arrastar pra mover quando zoomado ---
+  // Arrastar com mouse (só quando zoomado)
   let isDragging = false;
   img.addEventListener('mousedown', (e) => {
     if (lightboxState.scale <= 1) return;
+    e.preventDefault();
     isDragging = true;
     lightboxState.panStartX = e.clientX;
     lightboxState.panStartY = e.clientY;
@@ -2160,11 +2540,16 @@ function initLightboxGestures() {
     lightboxState.tx = lightboxState.panStartTx + dx;
     lightboxState.ty = lightboxState.panStartTy + dy;
     clampPan();
-    updateLightboxTransform();
+    updateLightboxTransform(false);
   });
   window.addEventListener('mouseup', () => {
     isDragging = false;
     img.style.cursor = '';
+  });
+
+  // Cursor: muda pra "grab" quando zoomado
+  img.addEventListener('mouseenter', () => {
+    img.style.cursor = lightboxState.scale > 1 ? 'grab' : '';
   });
 }
 

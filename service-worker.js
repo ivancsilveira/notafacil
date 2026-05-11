@@ -1,9 +1,9 @@
-// NotaFácil Service Worker — v1.0.7
+// NotaFácil Service Worker — v1.0.10
 // Permite o app funcionar offline (visualizar documentos já enviados)
 // e acelera o carregamento.
 // Inclui Web Share Target: receber fotos/PDFs compartilhados do Android.
 
-const CACHE_NAME = 'notafacil-v1.0.7';
+const CACHE_NAME = 'notafacil-v1.0.10';
 const URLS_TO_CACHE = [
   './',
   './index.html',
