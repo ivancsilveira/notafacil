@@ -2,7 +2,7 @@
 
 > Sistema web de organização automática de notas fiscais, recibos, boletos e garantias com IA (Claude) e Firebase.
 
-**Versão atual:** v1.0.15
+**Versão atual:** v1.0.19
 **Última atualização:** 11/05/2026
 **Construído por:** Ivan Silveira (com assistência do Claude da Anthropic)
 
@@ -199,6 +199,10 @@ Se mudar o `service-worker.js`, atualizar também a constante `CACHE_NAME` pra f
 | v1.0.13 | Processamento em lote: selecionar vários arquivos/fotos de uma vez, revisar cada um em sequência, botão "Pular este" |
 | v1.0.14 | 🧠 **Pastas inteligentes**: descreve o tipo de documento e Claude extrai campos específicos. Suporte a QR Code PIX em boletos, PDFs com várias páginas (max_tokens 4096), correção do bug de mover documento (recarrega Firestore), edição de pastas customizadas |
 | v1.0.15 | Correção do zoom: fundo do lightbox agora é preto sólido (antes era 95% opaco, mostrando o conteúdo da tela atrás como sobreposição estranha) |
+| v1.0.16 | Correção definitiva do zoom: esconder modal de detalhes (visibility:hidden) durante o lightbox e restaurar depois. Resolve bug de z-index do iOS Safari onde textos do modal apareciam por cima da foto zoomada |
+| v1.0.17 | Botão "☁️ Importar da nuvem" sem accept restritivo, força o iOS a mostrar Google Drive, OneDrive, Dropbox, iCloud no seletor de arquivos nativo |
+| v1.0.18 | Dias de aviso de boleto configuráveis (Ajustes + por agendamento). Modal "Agendar pagamento" permite escolher 0/1/2/3/5/7 dias antes ou valor customizado. Padrão: 0 dias (no dia do vencimento). PIX QR Code também incluído no corpo do evento |
+| v1.0.19 | **Correção do zoom em PDFs**: PDFs agora não tentam abrir no lightbox (que é só pra imagens). Em vez disso, mostram um card laranja "Toque para abrir em tela cheia" que abre o PDF no Safari/visualizador nativo do iOS, com zoom próprio do PDF |
 
 ---
 

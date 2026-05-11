@@ -180,7 +180,7 @@
   .upload-icon { font-size: 48px; margin-bottom: 8px; }
   .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
   .upload-sub { font-size: 13px; color: #888; margin-bottom: 16px; }
-  #fileInput, #cameraInput { display: none; }
+  #fileInput, #cameraInput, #cloudInput { display: none; }
 
   /* SECTION LABEL */
   .section-label {
@@ -517,6 +517,48 @@
   }
   .detail-photo:active { opacity: 0.7; }
 
+  /* PLACEHOLDER PRA PDF (PDFs não dão zoom no lightbox, abrem no Safari) */
+  .detail-pdf-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, #FFF3E8 0%, #FFE0C2 100%);
+    border: 2px solid #FFD4B8;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .detail-pdf-card:active {
+    background: linear-gradient(135deg, #FFE0C2 0%, #FFD4B8 100%);
+    transform: scale(0.98);
+  }
+  .detail-pdf-icon {
+    font-size: 42px;
+    flex-shrink: 0;
+  }
+  .detail-pdf-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .detail-pdf-text strong {
+    color: #FF6B35;
+    font-size: 15px;
+  }
+  .detail-pdf-text span {
+    color: #8B4500;
+    font-size: 12px;
+  }
+  .detail-pdf-arrow {
+    color: #FF6B35;
+    font-size: 28px;
+    font-weight: 300;
+    flex-shrink: 0;
+  }
+
   /* LIGHTBOX - VISUALIZAR FOTO EM TELA CHEIA COM ZOOM */
   .lightbox {
     display: none;
@@ -607,7 +649,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.15 · 11/05/2026
+    Versão 1.0.19 · 11/05/2026
   </div>
 </div>
 
@@ -617,7 +659,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.15</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.19</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -632,13 +674,18 @@
       <div class="upload-card">
         <div class="upload-icon">📸</div>
         <div class="upload-title">Tirar foto ou enviar arquivo</div>
-        <div class="upload-sub">Foto da nota, PDF do email ou print do WhatsApp</div>
-        <div class="btn-row">
-          <button class="btn" onclick="document.getElementById('cameraInput').click()">📷 Câmera</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">📎 Arquivo</button>
+        <div class="upload-sub">Foto da nota, PDF do email, print do WhatsApp ou da nuvem</div>
+        <div class="btn-row" style="flex-wrap:wrap;gap:8px;">
+          <button class="btn" onclick="document.getElementById('cameraInput').click()" style="flex:1;min-width:0;">📷 Câmera</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()" style="flex:1;min-width:0;">📎 Arquivo</button>
         </div>
+        <div class="btn-row" style="margin-top:8px;">
+          <button class="btn btn-secondary" onclick="document.getElementById('cloudInput').click()" style="width:100%;background:#E3F2FD;color:#1565C0;border-color:#BBDEFB;">☁️ Importar da nuvem (Drive, OneDrive, Dropbox...)</button>
+        </div>
+        <p style="font-size:11px;color:#888;margin-top:8px;line-height:1.4;">💡 Dica: pra escolher de Google Drive, OneDrive, Dropbox ou iCloud, use "Importar da nuvem". Os apps precisam estar instalados no celular.</p>
         <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple onchange="handleFileSelect(event)">
         <input type="file" id="fileInput" accept="image/*,application/pdf" multiple onchange="handleFileSelect(event)">
+        <input type="file" id="cloudInput" multiple onchange="handleFileSelect(event)">
       </div>
 
       <div class="section-label">Últimos enviados</div>
@@ -765,6 +812,24 @@
 
       <div class="card">
         <div class="config-section">
+          <h3>💳 Aviso de boletos</h3>
+          <p style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.4;">Quantos dias ANTES do vencimento do boleto você quer ser avisado? (0 = no dia mesmo, às 10h)</p>
+          <select id="cfgBoletoWarningDays" class="form-select" onchange="saveBoletoWarningDays()">
+            <option value="0" selected>0 dias (no dia do vencimento)</option>
+            <option value="1">1 dia antes</option>
+            <option value="2">2 dias antes</option>
+            <option value="3">3 dias antes</option>
+            <option value="5">5 dias antes</option>
+            <option value="7">7 dias antes</option>
+            <option value="custom">Outro... (digitar)</option>
+          </select>
+          <input type="number" id="cfgBoletoWarningDaysCustom" class="form-input" placeholder="Digite os dias (ex: 4)" min="0" max="60" style="margin-top:8px;display:none;" oninput="saveBoletoWarningDays()">
+          <p style="font-size:11px;color:#888;margin-top:6px;line-height:1.4;">O lembrete sempre será criado às 10h da manhã. Você pode mudar esse valor na hora de agendar cada boleto.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="config-section">
           <h3>🚪 Sessão</h3>
           <button class="btn btn-secondary" onclick="logout()">Sair da conta</button>
         </div>
@@ -782,10 +847,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.15</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.19</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.15 - correção do zoom (fundo preto sólido))</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.19 - PDFs abrem no Safari; corrigido bug do zoom em PDF)</span>
           </p>
         </div>
       </div>
@@ -920,7 +985,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal('detailModal')">×</button>
     <div class="modal-title" id="detailTitle">Documento</div>
-    <img id="detailPhoto" class="detail-photo" alt="" onclick="openLightbox(this.src)">
+    <div id="detailPhotoContainer"></div>
     <div id="detailContent"></div>
     <div class="btn-row" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn btn-secondary" onclick="openMoveModal()" style="flex:1;min-width:0;">📁 Mover</button>
@@ -1050,6 +1115,40 @@
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn btn-secondary" onclick="closeModal('scheduleModal')">Cancelar</button>
       <button class="btn" onclick="confirmSchedule()">📅 Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AGENDAR BOLETO (escolher quantos dias antes do vencimento) -->
+<div id="scheduleBoletoModal" class="modal-overlay" style="z-index:250;" onclick="if(event.target===this)closeModal('scheduleBoletoModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('scheduleBoletoModal')">×</button>
+    <div class="modal-title">💳 Agendar pagamento</div>
+    <p style="color:#666;font-size:13px;margin-bottom:14px;">Quando você quer ser avisado pra pagar esse boleto? (sempre às 10h da manhã)</p>
+
+    <div id="scheduleBoletoPreview" style="background:#FFF9E8;border-radius:8px;padding:10px;margin-bottom:14px;font-size:13px;color:#8B5A0F;">
+      <!-- preenchido por JS -->
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Avisar antes</label>
+      <select id="scheduleBoletoDays" class="form-select" onchange="onScheduleBoletoDaysChange()">
+        <option value="0">No dia do vencimento</option>
+        <option value="1">1 dia antes</option>
+        <option value="2">2 dias antes</option>
+        <option value="3">3 dias antes</option>
+        <option value="5">5 dias antes</option>
+        <option value="7">7 dias antes</option>
+        <option value="custom">Outro... (digitar)</option>
+      </select>
+      <input type="number" id="scheduleBoletoDaysCustom" class="form-input" placeholder="Digite os dias (ex: 4)" min="0" max="60" style="margin-top:8px;display:none;">
+    </div>
+
+    <p id="scheduleBoletoDateInfo" style="font-size:12px;color:#888;text-align:center;margin-bottom:10px;"></p>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeModal('scheduleBoletoModal')">Cancelar</button>
+      <button class="btn" onclick="confirmScheduleBoleto()">💳 Adicionar</button>
     </div>
   </div>
 </div>
@@ -1219,7 +1318,10 @@ function showScreen(name) {
 
   if (name === 'folders') updateFolderCounts();
   if (name === 'warranty') renderWarranties();
-  if (name === 'config') loadWarningDaysConfig();
+  if (name === 'config') {
+    loadWarningDaysConfig();
+    loadBoletoWarningDaysConfig();
+  }
 }
 window.showScreen = showScreen;
 
@@ -2135,9 +2237,15 @@ function renderRecent() {
 
 function docCardHTML(d, searchTerm) {
   const photo = d.productPhoto || d.photoUrl;
-  const photoHTML = photo
-    ? `<img src="${escapeHtml(photo)}" onerror="this.parentElement.innerHTML='${TIPO_ICONS[d.tipo]||'📄'}'">`
-    : (TIPO_ICONS[d.tipo] || '📄');
+  // Se for PDF (sem productPhoto), mostra ícone — não tenta carregar PDF como <img>
+  let photoHTML;
+  if (isPdfDocument(d)) {
+    photoHTML = '📄';
+  } else {
+    photoHTML = photo
+      ? `<img src="${escapeHtml(photo)}" onerror="this.parentElement.innerHTML='${TIPO_ICONS[d.tipo]||'📄'}'">`
+      : (TIPO_ICONS[d.tipo] || '📄');
+  }
 
   let badge = `<span class="badge badge-info">${TIPO_LABELS[d.tipo]||d.tipo}</span>`;
   if (d.tipo === 'nota_fiscal' && d.garantia_vence) {
@@ -2239,6 +2347,61 @@ function saveWarningDays() {
   }
 }
 window.saveWarningDays = saveWarningDays;
+
+// ========== CONFIGURAÇÃO: DIAS DE AVISO DE BOLETO ==========
+function getBoletoWarningDaysKey() {
+  return 'notafacil_boleto_warning_days_' + (currentUser ? currentUser.uid : 'guest');
+}
+
+function getDefaultBoletoWarningDays() {
+  const raw = localStorage.getItem(getBoletoWarningDaysKey());
+  if (raw === null) return 0; // padrão: no dia mesmo
+  const n = parseInt(raw);
+  return (!isNaN(n) && n >= 0 && n <= 60) ? n : 0;
+}
+
+function loadBoletoWarningDaysConfig() {
+  const days = getDefaultBoletoWarningDays();
+  const select = document.getElementById('cfgBoletoWarningDays');
+  const custom = document.getElementById('cfgBoletoWarningDaysCustom');
+  if (!select || !custom) return;
+
+  const preset = ['0','1','2','3','5','7'];
+  if (preset.includes(String(days))) {
+    select.value = String(days);
+    custom.style.display = 'none';
+    custom.value = '';
+  } else {
+    select.value = 'custom';
+    custom.style.display = 'block';
+    custom.value = days;
+  }
+}
+
+function saveBoletoWarningDays() {
+  const select = document.getElementById('cfgBoletoWarningDays');
+  const custom = document.getElementById('cfgBoletoWarningDaysCustom');
+  if (!select) return;
+
+  if (select.value === 'custom') {
+    custom.style.display = 'block';
+    const n = parseInt(custom.value);
+    if (!isNaN(n) && n >= 0 && n <= 60) {
+      localStorage.setItem(getBoletoWarningDaysKey(), String(n));
+      const txt = n === 0 ? 'no dia do vencimento' : `${n} dia(s) antes`;
+      showToast(`Aviso de boleto: ${txt}`, 'success');
+    }
+  } else {
+    custom.style.display = 'none';
+    const n = parseInt(select.value);
+    if (!isNaN(n) && n >= 0) {
+      localStorage.setItem(getBoletoWarningDaysKey(), String(n));
+      const txt = n === 0 ? 'no dia do vencimento' : `${n} dia(s) antes`;
+      showToast(`Aviso de boleto: ${txt}`, 'success');
+    }
+  }
+}
+window.saveBoletoWarningDays = saveBoletoWarningDays;
 
 function getCustomFoldersKey() {
   return 'notafacil_folders_' + (currentUser ? currentUser.uid : 'guest');
@@ -2527,13 +2690,59 @@ function renderWarranties() {
 }
 
 // ========== DETALHE / EXCLUIR ==========
+// ========== RENDERIZA FOTO OU PLACEHOLDER DE PDF NO DETALHE ==========
+// Detecta se o arquivo é PDF (pela extensão ou photoPath)
+function isPdfDocument(d) {
+  if (!d) return false;
+  // Se tem productPhoto (foto do produto buscada), trata como imagem mesmo se for PDF
+  if (d.productPhoto) return false;
+  // Verifica pela extensão do photoPath ou photoUrl
+  const path = (d.photoPath || d.photoUrl || '').toLowerCase();
+  return path.includes('.pdf') || path.endsWith('pdf');
+}
+
+function renderDetailPhoto(d) {
+  const container = document.getElementById('detailPhotoContainer');
+  if (!container) return;
+
+  if (isPdfDocument(d)) {
+    // Renderiza placeholder pra PDF — abre no Safari/visualizador nativo
+    const url = d.photoUrl || '';
+    container.innerHTML = `
+      <div class="detail-pdf-card" onclick="openPdfExternal('${url.replace(/'/g, '&#39;')}')">
+        <div class="detail-pdf-icon">📄</div>
+        <div class="detail-pdf-text">
+          <strong>Documento PDF</strong>
+          <span>Toque para abrir em tela cheia</span>
+        </div>
+        <div class="detail-pdf-arrow">›</div>
+      </div>`;
+  } else {
+    // Renderiza imagem normal (com zoom no lightbox)
+    const photoSrc = d.productPhoto || d.photoUrl || '';
+    container.innerHTML = `<img id="detailPhoto" class="detail-photo" src="${escapeHtml(photoSrc)}" alt="" onclick="openLightbox(this.src)">`;
+  }
+}
+
+// Abre o PDF em uma nova aba/Safari (usa o visualizador nativo do iOS)
+function openPdfExternal(url) {
+  if (!url) {
+    showToast('Link do arquivo não disponível', 'error');
+    return;
+  }
+  window.open(url, '_blank');
+}
+window.openPdfExternal = openPdfExternal;
+
 function showDocDetail(id) {
   const d = currentDocs.find(x => x.id === id);
   if (!d) return;
   currentDetailDoc = d;
 
   document.getElementById('detailTitle').textContent = d.produto || d.loja || 'Documento';
-  document.getElementById('detailPhoto').src = d.productPhoto || d.photoUrl || '';
+
+  // Renderiza foto ou placeholder de PDF conforme o tipo de arquivo
+  renderDetailPhoto(d);
 
   let html = `<div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${TIPO_LABELS[d.tipo]||d.tipo}</span></div>`;
   if (d.loja) html += `<div class="detail-row"><span class="detail-label">Loja</span><span class="detail-value">${escapeHtml(d.loja)}</span></div>`;
@@ -2982,14 +3191,96 @@ function createGoogleCalendarEvent(d, daysAhead) {
 
 // ========== AGENDAMENTO DE BOLETO ==========
 // Cria evento no DIA do vencimento, às 10:00 da manhã, com a linha digitável
+// Doc atualmente sendo agendado (boleto)
+let pendingScheduleBoleto = null;
+
 function createBoletoCalendarEvent(d) {
-  if (isAppleDevice()) {
-    createAppleBoletoEvent(d);
-  } else {
-    createGoogleBoletoEvent(d);
+  // Abre o modal pra escolher quantos dias antes
+  pendingScheduleBoleto = d;
+
+  // Preview do que vai ser agendado
+  const preview = document.getElementById('scheduleBoletoPreview');
+  if (preview) {
+    preview.innerHTML = `<strong>${escapeHtml(d.loja || d.produto || 'Boleto')}</strong><br>` +
+      `<span style="font-size:11px;">Valor: R$ ${formatMoney(d.valor || 0)} · Vence: ${formatDate(d.vencimento)}</span>`;
   }
+
+  // Pré-seleciona com o valor padrão dos Ajustes
+  const defaultDays = getDefaultBoletoWarningDays();
+  const select = document.getElementById('scheduleBoletoDays');
+  const custom = document.getElementById('scheduleBoletoDaysCustom');
+  const preset = ['0','1','2','3','5','7'];
+  if (preset.includes(String(defaultDays))) {
+    select.value = String(defaultDays);
+    custom.style.display = 'none';
+    custom.value = '';
+  } else {
+    select.value = 'custom';
+    custom.style.display = 'block';
+    custom.value = defaultDays;
+  }
+
+  updateScheduleBoletoDateInfo();
+  openModal('scheduleBoletoModal');
 }
 window.createBoletoCalendarEvent = createBoletoCalendarEvent;
+
+function onScheduleBoletoDaysChange() {
+  const select = document.getElementById('scheduleBoletoDays');
+  const custom = document.getElementById('scheduleBoletoDaysCustom');
+  custom.style.display = (select.value === 'custom') ? 'block' : 'none';
+  if (select.value === 'custom') custom.focus();
+  updateScheduleBoletoDateInfo();
+}
+window.onScheduleBoletoDaysChange = onScheduleBoletoDaysChange;
+
+function getScheduleBoletoDaysValue() {
+  const select = document.getElementById('scheduleBoletoDays');
+  if (!select) return 0;
+  if (select.value === 'custom') {
+    const n = parseInt(document.getElementById('scheduleBoletoDaysCustom').value);
+    return (!isNaN(n) && n >= 0 && n <= 60) ? n : 0;
+  }
+  return parseInt(select.value) || 0;
+}
+
+function updateScheduleBoletoDateInfo() {
+  if (!pendingScheduleBoleto) return;
+  const days = getScheduleBoletoDaysValue();
+  const vence = new Date(pendingScheduleBoleto.vencimento + 'T10:00:00');
+  const aviso = new Date(vence);
+  aviso.setDate(aviso.getDate() - days);
+  const info = document.getElementById('scheduleBoletoDateInfo');
+  if (info) {
+    const dateStr = formatDate(aviso.toISOString().split('T')[0]);
+    const txtDays = days === 0
+      ? `<strong>${dateStr} às 10h</strong> (no dia do vencimento)`
+      : `<strong>${dateStr} às 10h</strong> (${days} dia(s) antes)`;
+    info.innerHTML = `O lembrete será criado para ${txtDays}`;
+  }
+}
+
+// Listener pra atualizar a previsão de data quando digitar no campo livre
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id === 'scheduleBoletoDaysCustom') {
+    updateScheduleBoletoDateInfo();
+  }
+});
+
+function confirmScheduleBoleto() {
+  if (!pendingScheduleBoleto) return;
+  const days = getScheduleBoletoDaysValue();
+  closeModal('scheduleBoletoModal');
+
+  // Cria o evento conforme o dispositivo
+  if (isAppleDevice()) {
+    createAppleBoletoEvent(pendingScheduleBoleto, days);
+  } else {
+    createGoogleBoletoEvent(pendingScheduleBoleto, days);
+  }
+  pendingScheduleBoleto = null;
+}
+window.confirmScheduleBoleto = confirmScheduleBoleto;
 
 // Formata para padrão iCalendar com hora: YYYYMMDDTHHMMSS
 function formatIcsDateTime(date) {
@@ -3001,9 +3292,13 @@ function formatIcsDateTime(date) {
   return `${y}${m}${day}T${h}${min}00`;
 }
 
-function createAppleBoletoEvent(d) {
-  // Cria data 10:00 LOCAL do dia do vencimento
+function createAppleBoletoEvent(d, daysAhead) {
+  daysAhead = (typeof daysAhead === 'number' && daysAhead >= 0) ? daysAhead : 0;
+  // Cria data 10:00 LOCAL do dia do vencimento, depois subtrai daysAhead
   const vence = new Date(d.vencimento + 'T10:00:00');
+  if (daysAhead > 0) {
+    vence.setDate(vence.getDate() - daysAhead);
+  }
   // Evento dura 30 min
   const fim = new Date(vence);
   fim.setMinutes(fim.getMinutes() + 30);
@@ -3011,15 +3306,19 @@ function createAppleBoletoEvent(d) {
   const dtStart = formatIcsDateTime(vence);
   const dtEnd = formatIcsDateTime(fim);
   const dtStamp = new Date().toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
-  const uid = `notafacil-boleto-${d.id || Date.now()}@notafacil.app`;
+  const uid = `notafacil-boleto-${d.id || Date.now()}-${daysAhead}@notafacil.app`;
 
-  const title = `💳 Pagar boleto: ${d.loja || d.produto || 'documento'}`;
+  const tituloPrefixo = daysAhead === 0
+    ? `💳 Pagar boleto:`
+    : `💳 Pagar boleto em ${daysAhead}d:`;
+  const title = `${tituloPrefixo} ${d.loja || d.produto || 'documento'}`;
 
   // Monta descrição com a linha digitável bem visível
   const descLines = [
     `Valor: R$ ${formatMoney(d.valor || 0)}`,
     `Loja/Emissor: ${d.loja || '-'}`,
     `Vence em: ${formatDate(d.vencimento)}`,
+    daysAhead > 0 ? `Lembrete antecipado: ${daysAhead} dia(s) antes` : 'Lembrete: no dia do vencimento',
     ''
   ];
   if (d.linha_digitavel) {
@@ -3027,10 +3326,19 @@ function createAppleBoletoEvent(d) {
     descLines.push(d.linha_digitavel);
     descLines.push('');
   }
+  if (d.pix_qrcode) {
+    descLines.push('PIX COPIA E COLA:');
+    descLines.push(d.pix_qrcode);
+    descLines.push('');
+  }
   descLines.push(`Boleto anexo: ${d.photoUrl || ''}`);
   descLines.push('');
   descLines.push('Criado pelo NotaFácil');
   const description = descLines.join('\n');
+
+  const alarmLabel = daysAhead === 0
+    ? `Boleto vence hoje às 10h: ${d.loja || d.produto || ''}`
+    : `Pagar boleto em ${daysAhead} dia(s): ${d.loja || d.produto || ''}`;
 
   const lines = [
     'BEGIN:VCALENDAR',
@@ -3055,7 +3363,7 @@ function createAppleBoletoEvent(d) {
     'BEGIN:VALARM',
     'TRIGGER:-PT1H',
     'ACTION:DISPLAY',
-    `DESCRIPTION:${escapeIcs('Boleto vence hoje às 10h: ' + (d.loja || d.produto || ''))}`,
+    `DESCRIPTION:${escapeIcs(alarmLabel)}`,
     'END:VALARM',
     'END:VEVENT',
     'END:VCALENDAR'
@@ -3072,12 +3380,19 @@ function createAppleBoletoEvent(d) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 
-  showToast('Boleto agendado pras 10h do vencimento! Toque no arquivo .ics que abriu.', 'success');
+  const toastMsg = daysAhead === 0
+    ? 'Boleto agendado pras 10h do vencimento! Toque no arquivo .ics que abriu.'
+    : `Boleto agendado pras 10h ${daysAhead} dia(s) antes do vencimento! Toque no arquivo .ics que abriu.`;
+  showToast(toastMsg, 'success');
 }
 
-function createGoogleBoletoEvent(d) {
-  // 10:00 no dia do vencimento
+function createGoogleBoletoEvent(d, daysAhead) {
+  daysAhead = (typeof daysAhead === 'number' && daysAhead >= 0) ? daysAhead : 0;
+  // 10:00 no dia do vencimento, subtraindo daysAhead
   const vence = new Date(d.vencimento + 'T10:00:00');
+  if (daysAhead > 0) {
+    vence.setDate(vence.getDate() - daysAhead);
+  }
   const fim = new Date(vence);
   fim.setMinutes(fim.getMinutes() + 30);
 
@@ -3085,16 +3400,25 @@ function createGoogleBoletoEvent(d) {
   const dateStart = formatIcsDateTime(vence);
   const dateEnd = formatIcsDateTime(fim);
 
-  const title = `💳 Pagar boleto: ${d.loja || d.produto || 'documento'}`;
+  const tituloPrefixo = daysAhead === 0
+    ? `💳 Pagar boleto:`
+    : `💳 Pagar boleto em ${daysAhead}d:`;
+  const title = `${tituloPrefixo} ${d.loja || d.produto || 'documento'}`;
   const detailsLines = [
     `Valor: R$ ${formatMoney(d.valor || 0)}`,
     `Loja/Emissor: ${d.loja || ''}`,
     `Vence em: ${formatDate(d.vencimento)}`,
+    daysAhead > 0 ? `Lembrete antecipado: ${daysAhead} dia(s) antes` : 'Lembrete: no dia do vencimento',
     ''
   ];
   if (d.linha_digitavel) {
     detailsLines.push('LINHA DIGITÁVEL (copie e cole no banco):');
     detailsLines.push(d.linha_digitavel);
+    detailsLines.push('');
+  }
+  if (d.pix_qrcode) {
+    detailsLines.push('PIX COPIA E COLA:');
+    detailsLines.push(d.pix_qrcode);
     detailsLines.push('');
   }
   detailsLines.push(`Boleto anexo: ${d.photoUrl || ''}`);
@@ -3191,6 +3515,14 @@ function openLightbox(src) {
   const img = document.getElementById('lightboxImg');
   img.src = src;
 
+  // 🔧 v1.0.16: ESCONDER todos os modais abertos enquanto o lightbox tá ativo
+  // (resolve o bug de sobreposição de textos por cima da foto zoomada no iOS Safari)
+  const detailModal = document.getElementById('detailModal');
+  if (detailModal && detailModal.classList.contains('active')) {
+    detailModal.dataset.wasOpen = 'true';
+    detailModal.style.visibility = 'hidden';
+  }
+
   // Reset
   resetLightboxZoom();
   lb.classList.add('active');
@@ -3223,6 +3555,13 @@ function closeLightbox(event) {
   lb.classList.remove('active');
   document.body.style.overflow = '';
   resetLightboxZoom();
+
+  // 🔧 v1.0.16: RESTAURAR o modal de detalhes se estava aberto
+  const detailModal = document.getElementById('detailModal');
+  if (detailModal && detailModal.dataset.wasOpen === 'true') {
+    detailModal.style.visibility = '';
+    delete detailModal.dataset.wasOpen;
+  }
 }
 window.closeLightbox = closeLightbox;
 
