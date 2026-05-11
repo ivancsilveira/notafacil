@@ -292,8 +292,32 @@
     align-items: center;
     justify-content: center;
   }
-  .folder-custom:hover .folder-custom-delete { display: flex; }
+  .folder-custom-edit {
+    position: absolute;
+    right: 68px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .folder-custom:hover .folder-custom-delete,
+  .folder-custom:hover .folder-custom-edit { display: flex; }
   .folder-custom-delete:hover { background: #FCE5E5; color: #8B1F1F; }
+  .folder-custom-edit:hover { background: #E3F2FD; color: #1565C0; }
+  /* Em mobile (sem hover), sempre visíveis */
+  @media (hover: none) {
+    .folder-custom-delete,
+    .folder-custom-edit { display: flex; opacity: 0.6; }
+  }
 
   /* DOCUMENT CARD */
   .doc-card {
@@ -498,8 +522,8 @@
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 99999;
+    background: #000000;
+    z-index: 999999;
     overflow: hidden;
     touch-action: none;
   }
@@ -513,6 +537,7 @@
     user-select: none;
     -webkit-user-drag: none;
     will-change: transform;
+    background: #000000;
   }
   .lightbox-close {
     position: fixed;
@@ -526,7 +551,7 @@
     color: white;
     font-size: 24px;
     cursor: pointer;
-    z-index: 100000;
+    z-index: 1000000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -539,11 +564,11 @@
     transform: translateX(-50%);
     color: rgba(255,255,255,0.7);
     font-size: 12px;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.6);
     padding: 6px 12px;
     border-radius: 16px;
     pointer-events: none;
-    z-index: 100000;
+    z-index: 1000000;
   }
   .detail-row {
     display: flex;
@@ -582,7 +607,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.13 · 10/05/2026
+    Versão 1.0.15 · 11/05/2026
   </div>
 </div>
 
@@ -592,7 +617,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.13</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.15</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -757,10 +782,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.13</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.15</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-10 (v1.0.13 - múltiplos arquivos de uma vez)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.15 - correção do zoom (fundo preto sólido))</span>
           </p>
         </div>
       </div>
@@ -946,23 +971,51 @@
 <div id="createFolderModal" class="modal-overlay" style="z-index:250;" onclick="if(event.target===this)closeModal('createFolderModal')">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('createFolderModal')">×</button>
-    <div class="modal-title">📁 Nova pasta</div>
-    <p style="color:#666;font-size:13px;margin-bottom:14px;">Crie uma pasta personalizada (ex: Eletrodomésticos, Carro, Pousada).</p>
+    <div class="modal-title" id="createFolderModalTitle">📁 Nova pasta</div>
+    <p style="color:#666;font-size:13px;margin-bottom:14px;">Crie uma pasta personalizada com instruções específicas pro Claude.</p>
 
     <div class="form-group">
       <label class="form-label">Nome da pasta</label>
-      <input type="text" id="newFolderName" class="form-input" placeholder="Ex: Eletrodomésticos" maxlength="30">
+      <input type="text" id="newFolderName" class="form-input" placeholder="Ex: Escrituras, Contratos, Receitas" maxlength="30">
     </div>
 
     <div class="form-group">
       <label class="form-label">Ícone (emoji)</label>
       <input type="text" id="newFolderIcon" class="form-input" placeholder="📦" maxlength="3" value="📦">
-      <p style="font-size:11px;color:#888;margin-top:4px;">Sugestões: 📦 🚗 🏠 💡 🛋️ 👕 🏥 🎓 🍔 ⚙️</p>
+      <p style="font-size:11px;color:#888;margin-top:4px;">Sugestões: 📦 🚗 🏠 💡 🛋️ 👕 🏥 🎓 🍔 ⚙️ 📜 📋 ⚖️</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🧠 Instrução pro Claude <span style="font-weight:400;color:#888;font-size:11px;">— opcional, mas poderoso!</span></label>
+      <textarea id="newFolderDescription" class="form-input" rows="4" placeholder="Ex: Esta pasta é de escrituras. Quero que extraia: matrícula do imóvel, livro, folha, partes do negócio jurídico (comprador/vendedor), valor da transação, cartório." style="resize:vertical;min-height:80px;"></textarea>
+      <p style="font-size:11px;color:#888;margin-top:4px;line-height:1.4;">Descreva o tipo de documento e os campos que você quer que o Claude extraia. Quando você salvar um documento nessa pasta, ele analisa <strong>de novo</strong> seguindo essa instrução.</p>
     </div>
 
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn btn-secondary" onclick="closeModal('createFolderModal')">Cancelar</button>
-      <button class="btn" onclick="saveNewFolder()">💾 Criar pasta</button>
+      <button class="btn" id="saveFolderBtn" onclick="saveNewFolder()">💾 Criar pasta</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CAMPOS EXTRAS (extraídos pela pasta inteligente) -->
+<div id="extraFieldsModal" class="modal-overlay" style="z-index:250;" onclick="if(event.target===this)closeModal('extraFieldsModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('extraFieldsModal')">×</button>
+    <div class="modal-title" id="extraFieldsTitle">🧠 Campos extras (pasta inteligente)</div>
+    <p id="extraFieldsDescription" style="color:#666;font-size:13px;margin-bottom:14px;line-height:1.5;">
+      <!-- Preenchido por JS com a descrição da pasta -->
+    </p>
+
+    <div id="extraFieldsContent">
+      <!-- Preenchido por JS com os campos extraídos -->
+    </div>
+
+    <p style="font-size:11px;color:#888;margin-top:10px;line-height:1.4;">💡 Revise os campos antes de salvar. Você pode editar qualquer valor.</p>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="skipExtraFields()">Salvar sem extras</button>
+      <button class="btn" onclick="saveDocumentWithExtras()">💾 Salvar com extras</button>
     </div>
   </div>
 </div>
@@ -1488,6 +1541,7 @@ async function analyzeWithClaude(base64, mediaType) {
   "cnpj": "CNPJ se visível, senão null",
   "chave_acesso": "chave de acesso da NF-e/NFC-e (EXATAMENTE 44 dígitos, só números, sem espaços) se visível, senão null",
   "linha_digitavel": "linha digitável do boleto (47 ou 48 dígitos, só números, sem espaços ou pontos) se for boleto, senão null",
+  "pix_qrcode": "código PIX Copia e Cola (BR Code) se houver QR Code de PIX no boleto, senão null",
   "valor": número (apenas o valor, sem R$),
   "data": "YYYY-MM-DD" (data da compra/emissão),
   "vencimento": "YYYY-MM-DD" (apenas pra boletos, senão null),
@@ -1512,6 +1566,19 @@ Sobre "linha_digitavel" (boletos brasileiros) — IMPORTANTE:
 - Se for boleto mas a linha digitável não estiver legível, retorne null
 - Se a foto estiver borrada, prefira retornar null em vez de chutar
 
+Sobre "pix_qrcode" (QR Code de PIX em boletos) — IMPORTANTE:
+- Boletos modernos têm um QR Code do PIX que contém um código BR Code (PIX Copia e Cola)
+- Se você vê um QR Code no boleto E consegue identificar o texto do código PIX próximo a ele (ex: rotulado como "PIX Copia e Cola", "Copia e Cola PIX", "Código PIX"), extraia esse texto inteiro
+- O código PIX BR Code geralmente começa com "00020126" ou similar e é longo (200-500 caracteres alfanuméricos)
+- Se você só vê o QR Code mas o código BR não está escrito no documento como texto, retorne null (não tente decodificar QR)
+- Se não for boleto ou não houver código PIX visível como texto, retorne null
+
+IMPORTANTE — DOCUMENTOS COM VÁRIAS PÁGINAS:
+- Se o documento (PDF ou imagem) tiver MAIS DE UMA PÁGINA, analise TODAS as páginas
+- Os campos importantes podem estar em qualquer página (ex: chave de acesso na 1ª, valor total na última)
+- Combine as informações de todas as páginas pra preencher o JSON
+- Se o "resumo" for útil, mencione brevemente quantas páginas tem e o que está em cada
+
 Se não conseguir identificar algum campo, use null. Para "tipo": nota_fiscal é cupom/NF de produtos, recibo é prestação de serviço, boleto é cobrança bancária. Se for foto borrada ou ilegível, marca tipo="outros" e resumo="Documento ilegível".`;
 
   const isImage = !mediaType.includes('pdf');
@@ -1526,7 +1593,7 @@ Se não conseguir identificar algum campo, use null. Para "tipo": nota_fiscal é
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 1024,
+      max_tokens: 4096,
       messages: [{
         role: 'user',
         content: [sourceBlock, { type: 'text', text: prompt }]
@@ -1763,7 +1830,63 @@ function openCreateFolderFromReview() {
 window.openCreateFolderFromReview = openCreateFolderFromReview;
 
 // ========== SALVAR DOCUMENTO ==========
+// Estado: dados do documento "preparado pra salvar", esperando os campos extras
+let pendingSmartFolderSave = null;
+
 async function saveDocument() {
+  if (!pendingDoc) return;
+
+  try {
+    const tipo = document.getElementById('reviewType').value;
+    const customFolderId = document.getElementById('reviewCustomFolder').value || null;
+
+    // Verifica se a pasta selecionada é "inteligente" (tem descrição/instrução)
+    const folder = customFolderId
+      ? getCustomFolders().find(f => f.id === customFolderId)
+      : null;
+    const isSmartFolder = folder && folder.description && folder.description.trim().length > 0;
+
+    if (isSmartFolder) {
+      // === FLUXO PASTA INTELIGENTE: chama Claude DE NOVO com instrução customizada ===
+      showLoading('🧠 Analisando com instrução da pasta...');
+
+      let extraFields;
+      try {
+        extraFields = await analyzeWithSmartFolder(
+          pendingDoc.base64,
+          pendingDoc.mediaType,
+          folder.description
+        );
+      } catch (err) {
+        hideLoading();
+        console.error('Erro na análise inteligente:', err);
+        showToast('Erro na análise inteligente. Salvando sem campos extras.', 'error');
+        // Fallback: salva sem os extras
+        await finalizeSaveDocument({});
+        return;
+      }
+
+      hideLoading();
+
+      // Guarda os dados pra salvar depois (quando o usuário confirmar os extras)
+      pendingSmartFolderSave = { folder };
+
+      // Mostra modal de revisão dos campos extras
+      showExtraFieldsModal(folder, extraFields);
+    } else {
+      // === FLUXO NORMAL: salva direto ===
+      await finalizeSaveDocument({});
+    }
+  } catch (err) {
+    hideLoading();
+    console.error(err);
+    showToast('Erro: ' + err.message, 'error');
+  }
+}
+window.saveDocument = saveDocument;
+
+// Função real de salvar (chamada do fluxo normal ou depois da revisão dos extras)
+async function finalizeSaveDocument(extraFields) {
   if (!pendingDoc) return;
 
   try {
@@ -1773,10 +1896,8 @@ async function saveDocument() {
     const garantiaMeses = parseInt(document.getElementById('reviewWarranty').value) || null;
     const dataCompra = document.getElementById('reviewDate').value;
     const customFolderId = document.getElementById('reviewCustomFolder').value || null;
-    // Chave de acesso: limpa pra ter só dígitos
     const chaveAcessoRaw = document.getElementById('reviewChaveAcesso').value || '';
     const chaveAcesso = chaveAcessoRaw.replace(/\D/g, '') || null;
-    // Linha digitável (boleto): limpa pra ter só dígitos
     const linhaDigitavelRaw = document.getElementById('reviewLinhaDigitavel').value || '';
     const linhaDigitavel = linhaDigitavelRaw.replace(/\D/g, '') || null;
 
@@ -1789,11 +1910,13 @@ async function saveDocument() {
       cnpj: pendingDoc.analysis.cnpj || null,
       chave_acesso: chaveAcesso,
       linha_digitavel: linhaDigitavel,
+      pix_qrcode: pendingDoc.analysis.pix_qrcode || null,
       vencimento: pendingDoc.analysis.vencimento || null,
       garantia_meses: garantiaMeses,
       garantia_vence: null,
       customFolder: customFolderId,
       productPhoto: pendingDoc.productPhoto || null,
+      extraFields: extraFields && Object.keys(extraFields).length > 0 ? extraFields : null,
       criado_em: window.fbHelpers.serverTimestamp(),
       uid: currentUser.uid
     };
@@ -1823,6 +1946,7 @@ async function saveDocument() {
     hideLoading();
     closeModal('reviewModal');
     pendingDoc = null;
+    pendingSmartFolderSave = null;
 
     // Mensagem diferente se estiver em fila
     if (fileQueueTotal > 1) {
@@ -1840,10 +1964,8 @@ async function saveDocument() {
 
     // Se ainda tem arquivos na fila, processa o próximo
     if (fileQueue.length > 0) {
-      // Pequeno delay pra a UI respirar
       setTimeout(() => processNextInQueue(), 400);
     } else if (fileQueueTotal > 1) {
-      // Fim da fila múltipla
       fileQueueTotal = 0;
       fileQueueCurrentIndex = 0;
     }
@@ -1853,7 +1975,126 @@ async function saveDocument() {
     showToast('Erro ao salvar: ' + err.message, 'error');
   }
 }
-window.saveDocument = saveDocument;
+
+// Segunda chamada ao Claude com instrução customizada da pasta
+async function analyzeWithSmartFolder(base64, mediaType, folderDescription) {
+  const prompt = `O usuário criou uma pasta personalizada com a seguinte descrição/instrução:
+
+"${folderDescription}"
+
+Analise o documento (PDF ou imagem) abrindo todas as páginas se houver mais de uma, e extraia EXATAMENTE os campos que o usuário pediu acima.
+
+Responda APENAS um JSON puro, sem markdown e sem comentários, no formato:
+{
+  "campos": {
+    "nome_do_campo_1": "valor extraído ou null se não achou",
+    "nome_do_campo_2": "valor extraído ou null se não achou",
+    ...
+  }
+}
+
+Regras:
+- Use snake_case para os nomes dos campos (ex: "matricula", "livro_e_folha", "valor_transacao", "partes_negocio")
+- Se a instrução mencionar um campo, sempre inclua ele no JSON (mesmo que o valor seja null se não conseguir extrair)
+- Não invente valores: se não tiver certeza, retorne null
+- Para valores monetários, retorne apenas o número (ex: 1500.00) sem "R$"
+- Para datas, use formato "YYYY-MM-DD"
+- Para textos, mantenha como veio do documento (ex: nomes próprios em maiúsculas)`;
+
+  const isImage = !mediaType.includes('pdf');
+  const sourceBlock = isImage
+    ? { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } }
+    : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } };
+
+  const response = await fetch(CLAUDE_PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 2048,
+      messages: [{
+        role: 'user',
+        content: [sourceBlock, { type: 'text', text: prompt }]
+      }]
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error('Servidor: ' + response.status + ' - ' + errText.substring(0, 200));
+  }
+
+  const data = await response.json();
+  let text = data.content.map(c => c.text || '').join('').trim();
+  text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+
+  try {
+    const parsed = JSON.parse(text);
+    return parsed.campos || {};
+  } catch (e) {
+    console.error('JSON parse error (smart folder):', e, text);
+    return {};
+  }
+}
+
+// Mostra modal de revisão dos campos extras
+function showExtraFieldsModal(folder, fields) {
+  document.getElementById('extraFieldsTitle').innerHTML = `🧠 ${escapeHtml(folder.icon)} ${escapeHtml(folder.name)} — Campos extras`;
+  document.getElementById('extraFieldsDescription').innerHTML =
+    `<strong>Instrução desta pasta:</strong><br>"${escapeHtml(folder.description).replace(/\n/g, '<br>')}"`;
+
+  const container = document.getElementById('extraFieldsContent');
+  const keys = Object.keys(fields || {});
+
+  if (keys.length === 0) {
+    container.innerHTML = `
+      <div style="background:#FFF3E8;padding:12px;border-radius:8px;color:#8B5A0F;font-size:13px;text-align:center;">
+        ⚠️ Claude não conseguiu extrair os campos solicitados.<br>
+        Talvez a foto não esteja nítida ou a instrução precise ser mais clara.
+      </div>`;
+  } else {
+    container.innerHTML = keys.map(key => {
+      // Formata o nome do campo: matricula_imovel → Matrícula Imóvel
+      const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const val = fields[key] === null || fields[key] === undefined ? '' : String(fields[key]);
+      const safeKey = escapeHtml(key);
+      const safeVal = escapeHtml(val);
+      return `
+        <div class="form-group">
+          <label class="form-label">${escapeHtml(label)}</label>
+          <input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">
+        </div>
+      `;
+    }).join('');
+  }
+
+  openModal('extraFieldsModal');
+}
+
+// Pula campos extras: salva só com os básicos
+async function skipExtraFields() {
+  closeModal('extraFieldsModal');
+  await finalizeSaveDocument({});
+}
+window.skipExtraFields = skipExtraFields;
+
+// Salva com os campos extras (após revisão)
+async function saveDocumentWithExtras() {
+  // Coleta os valores editados dos inputs extras
+  const inputs = document.querySelectorAll('.extra-field-input');
+  const extraFields = {};
+  inputs.forEach(input => {
+    const key = input.getAttribute('data-key');
+    const value = input.value.trim();
+    if (key) {
+      extraFields[key] = value || null;
+    }
+  });
+
+  closeModal('extraFieldsModal');
+  await finalizeSaveDocument(extraFields);
+}
+window.saveDocumentWithExtras = saveDocumentWithExtras;
 
 // ========== CARREGAR DOCS ==========
 async function loadDocuments() {
@@ -2020,9 +2261,32 @@ function saveCustomFolders(folders) {
   }
 }
 
-function openCreateFolderModal() {
-  document.getElementById('newFolderName').value = '';
-  document.getElementById('newFolderIcon').value = '📦';
+// Estado: se está editando uma pasta existente, guarda o ID. Senão é null (criar nova).
+let editingFolderId = null;
+
+function openCreateFolderModal(folderIdToEdit) {
+  editingFolderId = folderIdToEdit || null;
+
+  if (editingFolderId) {
+    // Modo edição: pré-preencher com os dados da pasta
+    const folder = getCustomFolders().find(f => f.id === editingFolderId);
+    if (!folder) {
+      editingFolderId = null;
+      return;
+    }
+    document.getElementById('createFolderModalTitle').textContent = '✏️ Editar pasta';
+    document.getElementById('newFolderName').value = folder.name;
+    document.getElementById('newFolderIcon').value = folder.icon || '📦';
+    document.getElementById('newFolderDescription').value = folder.description || '';
+    document.getElementById('saveFolderBtn').innerHTML = '💾 Salvar mudanças';
+  } else {
+    // Modo criar: limpar tudo
+    document.getElementById('createFolderModalTitle').textContent = '📁 Nova pasta';
+    document.getElementById('newFolderName').value = '';
+    document.getElementById('newFolderIcon').value = '📦';
+    document.getElementById('newFolderDescription').value = '';
+    document.getElementById('saveFolderBtn').innerHTML = '💾 Criar pasta';
+  }
   openModal('createFolderModal');
   setTimeout(() => document.getElementById('newFolderName').focus(), 100);
 }
@@ -2031,6 +2295,7 @@ window.openCreateFolderModal = openCreateFolderModal;
 function saveNewFolder() {
   const name = document.getElementById('newFolderName').value.trim();
   const icon = document.getElementById('newFolderIcon').value.trim() || '📦';
+  const description = document.getElementById('newFolderDescription').value.trim();
 
   if (!name) {
     showToast('Digite um nome pra pasta', 'error');
@@ -2040,9 +2305,39 @@ function saveNewFolder() {
     showToast('Nome muito longo (máx 30 caracteres)', 'error');
     return;
   }
+  if (description.length > 1000) {
+    showToast('Descrição muito longa (máx 1000 caracteres)', 'error');
+    return;
+  }
 
   const folders = getCustomFolders();
 
+  if (editingFolderId) {
+    // ===== MODO EDIÇÃO =====
+    const idx = folders.findIndex(f => f.id === editingFolderId);
+    if (idx === -1) {
+      showToast('Pasta não encontrada', 'error');
+      return;
+    }
+    // Não permite nome duplicado (excluindo a própria pasta)
+    if (folders.some(f => f.id !== editingFolderId && f.name.toLowerCase() === name.toLowerCase())) {
+      showToast('Já existe outra pasta com esse nome', 'error');
+      return;
+    }
+    folders[idx].name = name;
+    folders[idx].icon = icon;
+    folders[idx].description = description;
+    folders[idx].updated = new Date().toISOString();
+    saveCustomFolders(folders);
+
+    closeModal('createFolderModal');
+    showToast(`Pasta "${name}" atualizada! ✅`, 'success');
+    renderCustomFoldersList();
+    editingFolderId = null;
+    return;
+  }
+
+  // ===== MODO CRIAR =====
   // Não permite nome duplicado
   if (folders.some(f => f.name.toLowerCase() === name.toLowerCase())) {
     showToast('Já existe uma pasta com esse nome', 'error');
@@ -2053,6 +2348,7 @@ function saveNewFolder() {
     id: 'custom_' + Date.now(),
     name: name,
     icon: icon,
+    description: description,
     created: new Date().toISOString()
   };
 
@@ -2087,13 +2383,17 @@ function renderCustomFoldersList() {
   container.innerHTML = '<div class="section-label" style="margin-top:16px;">Minhas pastas</div>' +
     folders.map(f => {
       const count = currentDocs.filter(d => d.customFolder === f.id).length;
+      const smartBadge = f.description
+        ? '<span style="font-size:10px;background:#E3F2FD;color:#1565C0;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600;">🧠 INTELIGENTE</span>'
+        : '';
       return `
         <div class="folder folder-custom" onclick="openCustomFolder('${f.id}')">
           <span class="folder-icon">${escapeHtml(f.icon)}</span>
           <div class="folder-info">
-            <div class="folder-name">${escapeHtml(f.name)}</div>
+            <div class="folder-name">${escapeHtml(f.name)}${smartBadge}</div>
             <div class="folder-count">${count} ${count === 1 ? 'documento' : 'documentos'}</div>
           </div>
+          <button class="folder-custom-edit" onclick="event.stopPropagation();openCreateFolderModal('${f.id}')" title="Editar pasta">✏️</button>
           <button class="folder-custom-delete" onclick="event.stopPropagation();deleteCustomFolder('${f.id}', '${escapeHtml(f.name).replace(/'/g, '&#39;')}')">🗑️</button>
           <span class="folder-arrow">›</span>
         </div>
@@ -2271,6 +2571,18 @@ function showDocDetail(id) {
     </div>`;
   }
 
+  // PIX QR Code (BR Code)
+  if (d.pix_qrcode) {
+    const pix = String(d.pix_qrcode);
+    // Mostra só os primeiros caracteres pra não ocupar muito espaço
+    const preview = pix.length > 80 ? pix.substring(0, 80) + '...' : pix;
+    html += `<div class="detail-row" style="flex-direction:column;align-items:flex-start;background:#E8F5E9;padding:10px;border-radius:8px;margin:6px 0;">
+      <span class="detail-label" style="margin-bottom:4px;color:#2E7D32;">📱 PIX Copia e Cola</span>
+      <span class="detail-value" style="text-align:left;max-width:100%;font-family:monospace;font-size:11px;word-break:break-all;line-height:1.4;color:#558B5C;">${escapeHtml(preview)}</span>
+      <button class="btn-link" style="margin-top:6px;padding:6px 10px;background:#2E7D32;color:white;" onclick="copyToClipboard('${pix.replace(/'/g, '&#39;')}', 'PIX')">📋 Copiar PIX</button>
+    </div>`;
+  }
+
   // Pasta personalizada
   const customFolders = getCustomFolders();
   const currentFolder = d.customFolder ? customFolders.find(f => f.id === d.customFolder) : null;
@@ -2278,6 +2590,21 @@ function showDocDetail(id) {
     ? `${currentFolder.icon} ${escapeHtml(currentFolder.name)}`
     : '<span style="color:#AAA;">— Nenhuma —</span>';
   html += `<div class="detail-row"><span class="detail-label">Pasta personalizada</span><span class="detail-value">${folderText}</span></div>`;
+
+  // Campos extras (pasta inteligente)
+  if (d.extraFields && typeof d.extraFields === 'object') {
+    const keys = Object.keys(d.extraFields).filter(k => d.extraFields[k] !== null && d.extraFields[k] !== '');
+    if (keys.length > 0) {
+      html += `<div style="margin-top:14px;background:#E3F2FD;border:1px solid #BBDEFB;border-radius:8px;padding:10px;">
+        <div style="font-size:11px;color:#1565C0;font-weight:600;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px;">🧠 Campos extras (pasta inteligente)</div>`;
+      keys.forEach(k => {
+        const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const val = d.extraFields[k];
+        html += `<div class="detail-row" style="border-color:#BBDEFB;"><span class="detail-label">${escapeHtml(label)}</span><span class="detail-value">${escapeHtml(String(val))}</span></div>`;
+      });
+      html += `</div>`;
+    }
+  }
 
   document.getElementById('detailContent').innerHTML = html;
 
@@ -2360,6 +2687,7 @@ async function confirmMove() {
 
   const newTipo = document.getElementById('moveTipo').value;
   const newCustomFolder = document.getElementById('moveCustomFolder').value || null;
+  const docId = currentDetailDoc.id;
 
   // Se nada mudou, só fecha
   if (newTipo === currentDetailDoc.tipo && newCustomFolder === (currentDetailDoc.customFolder || null)) {
@@ -2371,7 +2699,7 @@ async function confirmMove() {
   try {
     showLoading('Movendo documento...');
     const { doc, updateDoc } = window.fbHelpers;
-    const docRef = doc(window.fbDb, 'documentos', currentDetailDoc.id);
+    const docRef = doc(window.fbDb, 'documentos', docId);
 
     const updates = {
       tipo: newTipo,
@@ -2386,30 +2714,17 @@ async function confirmMove() {
 
     await updateDoc(docRef, updates);
 
-    // Atualiza estado local
-    currentDetailDoc.tipo = newTipo;
-    currentDetailDoc.customFolder = newCustomFolder;
-    if (updates.garantia_meses === null) {
-      currentDetailDoc.garantia_meses = null;
-      currentDetailDoc.garantia_vence = null;
-    }
+    // 🔧 CORREÇÃO: Recarrega TUDO do Firestore pra garantir consistência
+    // (antes só atualizava localmente, o que causava o documento aparecer em 2 pastas)
+    await loadDocuments();
 
     hideLoading();
     closeModal('moveModal');
-    showToast('Documento movido ✅', 'success');
+    closeModal('detailModal'); // fecha o detalhe também (vai abrir denovo no destino)
+    showToast(`Documento movido pra ${TIPO_LABELS[newTipo] || newTipo} ✅`, 'success');
 
-    // Refresh tela de detalhes e contadores
-    showDocDetail(currentDetailDoc.id);
-    updateFolderCounts();
-    // Se estava numa pasta aberta, recarrega ela
-    if (currentFolderType) {
-      if (currentFolderType.startsWith('custom:')) {
-        const customId = currentFolderType.substring(7);
-        openCustomFolder(customId);
-      } else {
-        openFolder(currentFolderType);
-      }
-    }
+    // Volta pra tela de pastas (mostrando a estrutura atualizada)
+    showScreen('folders');
   } catch (err) {
     hideLoading();
     showToast('Erro ao mover: ' + err.message, 'error');
