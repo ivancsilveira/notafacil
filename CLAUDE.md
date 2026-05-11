@@ -2,7 +2,7 @@
 
 > Sistema web de organização automática de notas fiscais, recibos, boletos e garantias com IA (Claude) e Firebase.
 
-**Versão atual:** v1.0.26
+**Versão atual:** v1.0.27
 **Última atualização:** 11/05/2026
 **Construído por:** Ivan Silveira (com assistência do Claude da Anthropic)
 
@@ -210,6 +210,7 @@ Se mudar o `service-worker.js`, atualizar também a constante `CACHE_NAME` pra f
 | v1.0.24 | **Datas em formato brasileiro**: campos extras com data ISO (YYYY-MM-DD) agora são exibidos como DD/MM/AAAA automaticamente. Função `formatValueSmart()` detecta data ISO e converte. Função inversa `parseValueSmart()` converte DD/MM/AAAA de volta pra ISO quando o usuário edita e salva. Aplicado nos 3 modais (novo doc, re-análise, edição) e no detalhe |
 | v1.0.25 | **Modal de ajuda pra importar da nuvem**: o iOS Safari não mostra providers de nuvem em PWAs (limitação da Apple). Substituído o botão "Importar da nuvem" por "Como importar do Drive / OneDrive / iCloud" que abre modal com instruções passo a passo: (1) configurar providers no app Arquivos, (2) atalho via Compartilhar, (3) botão "tentar abrir app Arquivos" via esquema URL `shareddocuments://` |
 | v1.0.26 | **Edição inline de campos** no detalhe do documento. Cada linha agora é clicável (com ícone ✏️) e abre um modal de edição com input apropriado (text/number/date/select). Funciona pra: tipo, produto, loja, CNPJ, valor, data, vencimento, garantia, chave de acesso, linha digitável. Recalcula garantia_vence automaticamente se mudar data/tipo/garantia. **Bug do botão ✏️ editar pasta no iPhone corrigido**: agora os botões editar/excluir ficam sempre visíveis (não dependem de hover, que não existe no touch) |
+| v1.0.27 | **Bug "Load failed" na re-análise corrigido**: Safari iOS bloqueava `fetch()` direto do Firebase Storage por CORS. Substituído por `getBytes()` da SDK do Firebase Storage (não tem problema de CORS porque usa autenticação interna). Conversão ArrayBuffer → base64 feita em chunks pra não estourar a stack em arquivos grandes |
 
 ---
 

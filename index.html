@@ -669,7 +669,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.26 · 11/05/2026
+    Versão 1.0.27 · 11/05/2026
   </div>
 </div>
 
@@ -679,7 +679,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.26</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.27</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -869,10 +869,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.26</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.27</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.26 - editar campos inline + corrigido botão de editar pasta no iPhone)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.27 - corrigido erro "Load failed" na re-análise no iPhone)</span>
           </p>
         </div>
       </div>
@@ -1293,7 +1293,7 @@
     doc, deleteDoc, updateDoc, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import {
-    getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+    getStorage, ref, uploadBytes, getDownloadURL, deleteObject, getBytes
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
 
   const firebaseConfig = {
@@ -1322,7 +1322,7 @@
     signInWithPopup, signOut, onAuthStateChanged,
     collection, addDoc, getDocs, query, where, orderBy,
     doc, deleteDoc, updateDoc, serverTimestamp,
-    ref, uploadBytes, getDownloadURL, deleteObject
+    ref, uploadBytes, getDownloadURL, deleteObject, getBytes
   };
 
   // dispara evento quando firebase tá pronto
@@ -2665,23 +2665,35 @@ async function reanalyzeWithSmartFolder(docId) {
   try {
     showLoading('🔄 Baixando o documento...');
 
-    // Baixa o arquivo do Firebase Storage
-    const response = await fetch(d.photoUrl);
-    if (!response.ok) throw new Error('Não consegui baixar o arquivo');
-    const blob = await response.blob();
+    // Baixa o arquivo do Firebase Storage usando a SDK (sem problema de CORS no Safari)
+    let arrayBuffer;
+    try {
+      const { ref, getBytes, getDownloadURL } = window.fbHelpers;
+      // Se temos o photoPath, usa ele direto (preferível pela SDK)
+      if (d.photoPath) {
+        const fileRef = ref(window.fbStorage, d.photoPath);
+        arrayBuffer = await getBytes(fileRef);
+      } else if (d.photoUrl) {
+        // Fallback: tenta fetch (pode dar CORS em alguns casos)
+        const response = await fetch(d.photoUrl);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        arrayBuffer = await response.arrayBuffer();
+      } else {
+        throw new Error('Documento sem arquivo (talvez tenha sido criado via QR Code escaneado)');
+      }
+    } catch (downloadErr) {
+      console.error('Erro no download:', downloadErr);
+      throw new Error('Não consegui baixar o arquivo do Firebase: ' + (downloadErr.message || downloadErr));
+    }
 
-    // Converte pra base64
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result;
-        // Remove prefix "data:xxx;base64,"
-        const b64 = result.substring(result.indexOf(',') + 1);
-        resolve(b64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    // Converte ArrayBuffer pra base64
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    const chunkSize = 8192; // pra não estourar a stack em arquivos grandes
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    const base64 = btoa(binary);
 
     // Detecta tipo
     const isPdf = (d.photoPath || d.photoUrl || '').toLowerCase().includes('.pdf');
