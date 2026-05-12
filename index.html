@@ -669,7 +669,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.32 · 12/05/2026
+    Versão 1.0.33 · 12/05/2026
   </div>
 </div>
 
@@ -679,7 +679,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.32</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.33</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -866,10 +866,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.32</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.33</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-12 (v1.0.32 - timeout maior + mensagens de erro melhores)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-12 (v1.0.33 - fix [object Object] em campos complexos)</span>
           </p>
         </div>
       </div>
@@ -2659,15 +2659,19 @@ function showExtraFieldsModal(folder, fields) {
     container.innerHTML = keys.map(key => {
       // Formata o nome do campo: matricula_imovel → Matrícula Imóvel
       const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      const rawVal = fields[key] === null || fields[key] === undefined ? '' : String(fields[key]);
-      // Mostra datas formatadas em DD/MM/AAAA pro usuário ler/editar
-      const val = formatValueSmart(rawVal);
+      // Passa o valor cru (pode ser objeto/array) pra formatValueSmart
+      const val = formatValueSmart(fields[key]);
       const safeKey = escapeHtml(key);
       const safeVal = escapeHtml(val);
+      // Se valor tem quebras de linha (objeto/array formatado) ou é longo, usa textarea
+      const useTextarea = val.indexOf('\n') !== -1 || val.length > 60;
+      const inputHtml = useTextarea
+        ? `<textarea class="form-input extra-field-input" data-key="${safeKey}" rows="${Math.min(12, Math.max(3, (val.split('\n').length || 1) + 1))}" style="resize:vertical;font-family:inherit;line-height:1.5;">${safeVal}</textarea>`
+        : `<input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">`;
       return `
         <div class="form-group">
           <label class="form-label">${escapeHtml(label)}</label>
-          <input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">
+          ${inputHtml}
         </div>
       `;
     }).join('');
@@ -2850,14 +2854,17 @@ function showExtraFieldsModalForReanalyze(folder, fields) {
   } else {
     container.innerHTML = keys.map(key => {
       const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      const rawVal = fields[key] === null || fields[key] === undefined ? '' : String(fields[key]);
-      const val = formatValueSmart(rawVal);
+      const val = formatValueSmart(fields[key]);
       const safeKey = escapeHtml(key);
       const safeVal = escapeHtml(val);
+      const useTextarea = val.indexOf('\n') !== -1 || val.length > 60;
+      const inputHtml = useTextarea
+        ? `<textarea class="form-input extra-field-input" data-key="${safeKey}" rows="${Math.min(12, Math.max(3, (val.split('\n').length || 1) + 1))}" style="resize:vertical;font-family:inherit;line-height:1.5;">${safeVal}</textarea>`
+        : `<input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">`;
       return `
         <div class="form-group">
           <label class="form-label">${escapeHtml(label)}</label>
-          <input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">
+          ${inputHtml}
         </div>
       `;
     }).join('');
@@ -2959,14 +2966,17 @@ function editExtraFields(docId) {
   } else {
     container.innerHTML = keys.map(key => {
       const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      const rawVal = fields[key] === null || fields[key] === undefined ? '' : String(fields[key]);
-      const val = formatValueSmart(rawVal);
+      const val = formatValueSmart(fields[key]);
       const safeKey = escapeHtml(key);
       const safeVal = escapeHtml(val);
+      const useTextarea = val.indexOf('\n') !== -1 || val.length > 60;
+      const inputHtml = useTextarea
+        ? `<textarea class="form-input extra-field-input" data-key="${safeKey}" rows="${Math.min(12, Math.max(3, (val.split('\n').length || 1) + 1))}" style="resize:vertical;font-family:inherit;line-height:1.5;">${safeVal}</textarea>`
+        : `<input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">`;
       return `
         <div class="form-group">
           <label class="form-label">${escapeHtml(label)}</label>
-          <input type="text" class="form-input extra-field-input" data-key="${safeKey}" value="${safeVal}" placeholder="(vazio)">
+          ${inputHtml}
         </div>
       `;
     }).join('');
@@ -3731,18 +3741,24 @@ function showDocDetail(id) {
       const keys = Object.keys(d.extraFields).filter(k => d.extraFields[k] !== null && d.extraFields[k] !== '');
       keys.forEach(k => {
         const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        const rawVal = String(d.extraFields[k]);
-        // Formata datas ISO automaticamente pra DD/MM/AAAA
-        const val = formatValueSmart(rawVal);
-        // Se valor for muito longo (>30 chars) OU contém URL/código sem espaços, mostra empilhado verticalmente
-        const isLongValue = val.length > 30 || /https?:\/\//.test(val) || /^[^\s]{25,}$/.test(val);
+        // Passa o valor cru pra formatValueSmart — ela detecta se é objeto/array/data
+        const val = formatValueSmart(d.extraFields[k]);
+        // Detecta valor longo / complexo / com quebras de linha
+        const hasLineBreaks = val.indexOf('\n') !== -1;
+        const isLongValue = hasLineBreaks || val.length > 30 || /https?:\/\//.test(val) || /^[^\s]{25,}$/.test(val);
 
         if (isLongValue) {
-          // Layout vertical: label em cima, valor embaixo (em fonte monoespaçada se for código)
-          const isCode = /^[A-Za-z0-9.\-_]+$/.test(val) || val.length > 50;
+          // Layout vertical: label em cima, valor embaixo
+          const isCode = !hasLineBreaks && (/^[A-Za-z0-9.\-_]+$/.test(val) || val.length > 50);
+          // Se tem quebras de linha (objeto/array formatado), preserva com white-space:pre-wrap
+          const styleVal = hasLineBreaks
+            ? 'text-align:left;max-width:100%;white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.5;background:#F5F9FF;padding:8px 10px;border-radius:6px;width:100%;'
+            : (isCode
+              ? 'text-align:left;max-width:100%;word-break:break-all;overflow-wrap:break-word;font-family:monospace;font-size:11px;background:#F5F9FF;padding:6px 8px;border-radius:4px;width:100%;'
+              : 'text-align:left;max-width:100%;word-break:break-word;overflow-wrap:break-word;white-space:normal;');
           html += `<div class="detail-row" style="border-color:#BBDEFB;flex-direction:column;align-items:flex-start;gap:4px;padding:8px 0;">
             <span class="detail-label" style="text-align:left;">${escapeHtml(label)}</span>
-            <span class="detail-value" style="text-align:left;max-width:100%;word-break:break-all;overflow-wrap:break-word;${isCode ? 'font-family:monospace;font-size:11px;background:#F5F9FF;padding:6px 8px;border-radius:4px;width:100%;' : 'white-space:normal;'}">${escapeHtml(val)}</span>
+            <span class="detail-value" style="${styleVal}">${escapeHtml(val)}</span>
           </div>`;
         } else {
           // Layout horizontal padrão (valor curto)
@@ -4684,6 +4700,12 @@ function formatDate(s) {
 // Se não for data, retorna o valor original sem mudanças.
 function formatValueSmart(val) {
   if (val === null || val === undefined) return '';
+
+  // Se for objeto ou array, transforma em texto legível
+  if (typeof val === 'object') {
+    return formatObjectValue(val);
+  }
+
   const s = String(val).trim();
   if (!s) return '';
   // Pattern: começo da string YYYY-MM-DD (com ou sem hora depois)
@@ -4698,6 +4720,76 @@ function formatValueSmart(val) {
     }
   }
   return s;
+}
+
+// Converte um objeto ou array em texto legível.
+// Suporta estruturas aninhadas como exames laboratoriais (resultado + referência + status).
+function formatObjectValue(obj, indent) {
+  indent = indent || 0;
+  const prefix = '  '.repeat(indent);
+
+  if (obj === null || obj === undefined) return '';
+
+  // Array: lista os itens com bullets
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '';
+    return obj.map(item => {
+      if (typeof item === 'object' && item !== null) {
+        return prefix + '• ' + formatObjectValue(item, indent + 1).trim();
+      }
+      return prefix + '• ' + String(item);
+    }).join('\n');
+  }
+
+  // Objeto: lista chave: valor
+  if (typeof obj === 'object') {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return '';
+
+    // Heurística: se tem "valor" + "referencia" (típico de exame), formata bonito numa linha
+    const lowerKeys = keys.map(k => k.toLowerCase());
+    const hasResult = lowerKeys.some(k => k === 'valor' || k === 'resultado' || k === 'value' || k === 'result');
+    const hasRef = lowerKeys.some(k => k === 'referencia' || k === 'referência' || k === 'reference' || k === 'ref');
+
+    if (hasResult && keys.length <= 5) {
+      // Formato compacto: "📊 valor (ref: referência) status"
+      let result = '';
+      let reference = '';
+      let status = '';
+      let extras = [];
+      keys.forEach(k => {
+        const lk = k.toLowerCase();
+        const v = obj[k];
+        const vStr = v === null || v === undefined ? '' : String(v);
+        if (lk === 'valor' || lk === 'resultado' || lk === 'value' || lk === 'result') {
+          result = vStr;
+        } else if (lk === 'referencia' || lk === 'referência' || lk === 'reference' || lk === 'ref') {
+          reference = vStr;
+        } else if (lk === 'status' || lk === 'polegar' || lk === 'avaliacao' || lk === 'avaliação') {
+          status = vStr;
+        } else if (vStr) {
+          extras.push(vStr);
+        }
+      });
+      let line = result;
+      if (status) line = status + ' ' + line;
+      if (reference) line += ' (ref: ' + reference + ')';
+      if (extras.length > 0) line += ' — ' + extras.join(' / ');
+      return line.trim();
+    }
+
+    // Senão, formato linha-a-linha
+    return keys.map(k => {
+      const v = obj[k];
+      const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      if (typeof v === 'object' && v !== null) {
+        return prefix + label + ':\n' + formatObjectValue(v, indent + 1);
+      }
+      return prefix + label + ': ' + (v === null || v === undefined ? '—' : String(v));
+    }).join('\n');
+  }
+
+  return String(obj);
 }
 
 // Inverso de formatValueSmart: detecta DD/MM/AAAA e converte de volta pra YYYY-MM-DD.
