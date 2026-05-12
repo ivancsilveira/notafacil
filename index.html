@@ -669,7 +669,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.27 · 11/05/2026
+    Versão 1.0.29 · 12/05/2026
   </div>
 </div>
 
@@ -679,7 +679,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.27</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.29</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -700,12 +700,9 @@
           <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()" style="flex:1;min-width:0;">📎 Arquivo</button>
         </div>
         <div class="btn-row" style="margin-top:8px;">
-          <button class="btn btn-secondary" onclick="openCloudHelpModal()" style="width:100%;background:#E3F2FD;color:#1565C0;border-color:#BBDEFB;">☁️ Como importar do Drive / OneDrive / iCloud</button>
+          <button class="btn btn-secondary" onclick="openQrScanner()" style="width:100%;background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7;">📱 Escanear QR Code (boleto físico)</button>
         </div>
-        <div class="btn-row" style="margin-top:8px;">
-          <button class="btn btn-secondary" onclick="openQrScanner()" style="width:100%;background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7;">📱 Escanear QR Code (pagar boleto rápido)</button>
-        </div>
-        <p style="font-size:11px;color:#888;margin-top:8px;line-height:1.4;">💡 Dica: <strong>Escanear QR Code</strong> abre a câmera e lê QR Codes de boletos PIX direto — o jeito mais rápido de pagar.</p>
+        <p style="font-size:11px;color:#888;margin-top:8px;line-height:1.4;">💡 <strong>Câmera</strong> e <strong>Arquivo</strong> são o uso normal. <strong>Escanear QR Code</strong> é pra boletos em papel ou na tela de outro celular/PC.</p>
         <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple onchange="handleFileSelect(event)">
         <input type="file" id="fileInput" accept="image/*,application/pdf" multiple onchange="handleFileSelect(event)">
       </div>
@@ -869,10 +866,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.27</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.29</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-11 (v1.0.27 - corrigido erro "Load failed" na re-análise no iPhone)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-12 (v1.0.29 - ordem correta dos últimos enviados + remoção do botão nuvem)</span>
           </p>
         </div>
       </div>
@@ -1169,6 +1166,9 @@
 
       <div id="qrScannerStatus" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:white;padding:10px 20px;border-radius:24px;font-size:14px;text-align:center;max-width:90%;">
         Aponta a câmera pro QR Code do boleto
+      </div>
+      <!-- Área de erro detalhado (oculta por padrão) -->
+      <div id="qrScannerErrorBox" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:380px;background:rgba(0,0,0,0.9);border:1px solid rgba(255,107,53,0.5);border-radius:16px;padding:20px;text-align:center;color:white;">
       </div>
     </div>
 
@@ -1808,14 +1808,19 @@ async function openQrScanner() {
   }
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    showToast('Seu navegador não suporta câmera.', 'error');
+    showToast('Seu navegador não suporta câmera. Tenta usar o botão "📷 Câmera" comum.', 'error');
     return;
   }
 
   const modal = document.getElementById('qrScannerModal');
   const video = document.getElementById('qrScannerVideo');
   const status = document.getElementById('qrScannerStatus');
+  const errorBox = document.getElementById('qrScannerErrorBox');
   if (!modal || !video) return;
+
+  // Reset visual: esconder caixa de erro, mostrar status normal
+  if (errorBox) errorBox.style.display = 'none';
+  status.style.display = 'block';
 
   modal.classList.add('active');
   status.textContent = 'Pedindo acesso à câmera...';
@@ -1838,8 +1843,63 @@ async function openQrScanner() {
     scanQrFrame();
   } catch (err) {
     console.error('Erro ao abrir câmera:', err);
-    status.textContent = '❌ Não consegui abrir a câmera. Vai em Ajustes do iPhone → Safari → Câmera → Permitir.';
-    showToast('Câmera não autorizada. Habilita nos ajustes do iPhone.', 'error');
+
+    // Identifica o tipo de erro pra dar a mensagem mais útil
+    let errorTitle = '❌ Não consegui abrir a câmera';
+    let errorMsg = '';
+    let showSettings = false;
+
+    const errName = err.name || '';
+    const errMessage = (err.message || '').toLowerCase();
+
+    if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError' || errMessage.includes('permission') || errMessage.includes('denied')) {
+      errorTitle = '🔒 Câmera bloqueada';
+      errorMsg = 'A câmera está bloqueada nas configurações do Safari ou do iPhone.';
+      showSettings = true;
+    } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+      errorTitle = '📷 Câmera não encontrada';
+      errorMsg = 'Não tem câmera neste dispositivo, ou ela está sendo usada por outro app.';
+    } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
+      errorTitle = '⚠️ Câmera em uso';
+      errorMsg = 'A câmera está sendo usada por outro app. Fecha outros apps e tenta de novo.';
+    } else if (errName === 'OverconstrainedError') {
+      errorTitle = '⚠️ Câmera incompatível';
+      errorMsg = 'A câmera não suporta a resolução pedida.';
+    } else if (errName === 'NotSupportedError' || errMessage.includes('secure') || errMessage.includes('https')) {
+      errorTitle = '🔒 Conexão insegura';
+      errorMsg = 'A câmera só funciona em HTTPS. Verifica se o endereço começa com https://';
+    } else {
+      // Erro genérico
+      errorMsg = 'Algo deu errado: ' + (err.message || err.name || 'erro desconhecido');
+      showSettings = true;
+    }
+
+    // Esconde o status simples e mostra a caixa de erro detalhada
+    status.style.display = 'none';
+    if (errorBox) {
+      errorBox.style.display = 'block';
+      errorBox.innerHTML = `
+        <div style="font-size:18px;font-weight:600;color:white;margin-bottom:8px;">${errorTitle}</div>
+        <div style="font-size:14px;color:#FFD4B8;line-height:1.5;margin-bottom:14px;">${errorMsg}</div>
+        ${showSettings ? `
+          <div style="background:rgba(255,255,255,0.1);padding:10px;border-radius:8px;font-size:12px;color:white;line-height:1.6;margin-bottom:12px;text-align:left;">
+            <strong style="color:#FFD4B8;">📱 Como liberar a câmera:</strong><br>
+            1️⃣ Abre <strong>Ajustes</strong> do iPhone<br>
+            2️⃣ Procura <strong>"Safari"</strong> ou <strong>"NotaFácil"</strong><br>
+            3️⃣ Toca em <strong>"Câmera"</strong><br>
+            4️⃣ Marca <strong>"Permitir"</strong><br>
+            5️⃣ Volta no app e tenta de novo
+          </div>
+        ` : ''}
+        <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:12px;color:#1B5E20;font-size:13px;line-height:1.5;text-align:left;">
+          <strong>💡 Alternativa rápida:</strong><br>
+          Fecha aqui e usa o botão <strong>"📷 Câmera"</strong> na tela inicial.<br>
+          Tira foto do boleto normalmente — o app vai <strong>ler o QR Code automaticamente</strong>!
+        </div>
+        <button class="btn" onclick="closeQrScanner()" style="margin-top:14px;width:100%;background:white;color:#000;">Voltar</button>
+      `;
+    }
+    showToast('Câmera não disponível. Use a "📷 Câmera" pra ler QR pela foto.', 'error');
   }
 }
 window.openQrScanner = openQrScanner;
@@ -2665,31 +2725,96 @@ async function reanalyzeWithSmartFolder(docId) {
   try {
     showLoading('🔄 Baixando o documento...');
 
-    // Baixa o arquivo do Firebase Storage usando a SDK (sem problema de CORS no Safari)
+    // Baixa o arquivo do Firebase Storage
+    // Estratégia: pra arquivos grandes, getBytes() pode estourar timeout.
+    // Tentamos primeiro via getDownloadURL + fetch (mais tolerante a arquivos grandes).
     let arrayBuffer;
     try {
       const { ref, getBytes, getDownloadURL } = window.fbHelpers;
-      // Se temos o photoPath, usa ele direto (preferível pela SDK)
-      if (d.photoPath) {
-        const fileRef = ref(window.fbStorage, d.photoPath);
-        arrayBuffer = await getBytes(fileRef);
-      } else if (d.photoUrl) {
-        // Fallback: tenta fetch (pode dar CORS em alguns casos)
-        const response = await fetch(d.photoUrl);
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        arrayBuffer = await response.arrayBuffer();
+
+      if (d.photoPath || d.photoUrl) {
+        // Pega a URL pública via SDK (sem CORS)
+        let downloadUrl = d.photoUrl;
+        if (d.photoPath && !downloadUrl) {
+          const fileRef = ref(window.fbStorage, d.photoPath);
+          downloadUrl = await getDownloadURL(fileRef);
+        }
+
+        // Tenta fetch com timeout customizado (5 minutos pra PDFs grandes)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min
+
+        try {
+          showLoading('🔄 Baixando o documento...');
+          const response = await fetch(downloadUrl, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+
+          // Usa response.body com stream pra mostrar progresso se possível
+          const contentLength = response.headers.get('content-length');
+          if (contentLength && response.body) {
+            const total = parseInt(contentLength, 10);
+            const reader = response.body.getReader();
+            const chunks = [];
+            let received = 0;
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              received += value.length;
+              const pct = Math.round((received / total) * 100);
+              const sizeMb = (received / (1024 * 1024)).toFixed(1);
+              const totalMb = (total / (1024 * 1024)).toFixed(1);
+              showLoading(`🔄 Baixando... ${pct}% (${sizeMb}/${totalMb} MB)`);
+            }
+
+            // Junta os chunks em um único ArrayBuffer
+            const totalLen = chunks.reduce((a, c) => a + c.length, 0);
+            const merged = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const c of chunks) {
+              merged.set(c, offset);
+              offset += c.length;
+            }
+            arrayBuffer = merged.buffer;
+          } else {
+            // Sem content-length: baixa tudo de uma vez
+            arrayBuffer = await response.arrayBuffer();
+          }
+        } catch (fetchErr) {
+          clearTimeout(timeoutId);
+          // Se fetch falhou (CORS, etc.), tenta com getBytes como fallback
+          console.warn('Fetch falhou, tentando getBytes:', fetchErr);
+          if (d.photoPath) {
+            showLoading('🔄 Tentando outro método...');
+            const fileRef = ref(window.fbStorage, d.photoPath);
+            arrayBuffer = await getBytes(fileRef);
+          } else {
+            throw fetchErr;
+          }
+        }
       } else {
         throw new Error('Documento sem arquivo (talvez tenha sido criado via QR Code escaneado)');
       }
     } catch (downloadErr) {
       console.error('Erro no download:', downloadErr);
-      throw new Error('Não consegui baixar o arquivo do Firebase: ' + (downloadErr.message || downloadErr));
+
+      // Mensagem específica pra arquivo muito grande
+      const errMsg = (downloadErr.message || '').toLowerCase();
+      if (errMsg.includes('retry') || errMsg.includes('exceeded') || errMsg.includes('timeout')) {
+        throw new Error('Arquivo muito grande ou conexão lenta. Tenta de novo conectado ao Wi-Fi.');
+      }
+      throw new Error('Não consegui baixar: ' + (downloadErr.message || downloadErr));
     }
 
-    // Converte ArrayBuffer pra base64
+    showLoading('📦 Processando arquivo...');
+
+    // Converte ArrayBuffer pra base64 (em chunks pra não travar)
     const bytes = new Uint8Array(arrayBuffer);
+    const sizeMb = (bytes.length / (1024 * 1024)).toFixed(1);
     let binary = '';
-    const chunkSize = 8192; // pra não estourar a stack em arquivos grandes
+    const chunkSize = 8192;
     for (let i = 0; i < bytes.length; i += chunkSize) {
       binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
     }
@@ -2699,7 +2824,7 @@ async function reanalyzeWithSmartFolder(docId) {
     const isPdf = (d.photoPath || d.photoUrl || '').toLowerCase().includes('.pdf');
     const mediaType = isPdf ? 'application/pdf' : 'image/jpeg';
 
-    showLoading('🧠 Claude analisando com instrução da pasta...');
+    showLoading(`🧠 Claude analisando ${sizeMb}MB com instrução da pasta...`);
 
     // Chama Claude
     const extraFields = await analyzeWithSmartFolder(base64, mediaType, folder.description);
@@ -2882,8 +3007,15 @@ async function loadDocuments() {
     const snap = await getDocs(q);
     currentDocs = [];
     snap.forEach(d => currentDocs.push({ id: d.id, ...d.data() }));
-    // ordenar por data desc no cliente
+    // ordenar por data de upload (criado_em) desc no cliente
+    // Fallback pra data do documento se não tem criado_em (docs antigos)
     currentDocs.sort((a, b) => {
+      // criado_em é um Firestore Timestamp, tem .toMillis() ou .seconds
+      const ta = a.criado_em && a.criado_em.toMillis ? a.criado_em.toMillis() : (a.criado_em && a.criado_em.seconds ? a.criado_em.seconds * 1000 : 0);
+      const tb = b.criado_em && b.criado_em.toMillis ? b.criado_em.toMillis() : (b.criado_em && b.criado_em.seconds ? b.criado_em.seconds * 1000 : 0);
+      if (ta !== tb) return tb - ta; // mais recente primeiro
+
+      // Fallback: se não tem criado_em (docs muito antigos), usa data do documento
       const da = a.data || '';
       const db = b.data || '';
       return db.localeCompare(da);
