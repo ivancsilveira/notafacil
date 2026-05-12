@@ -2,7 +2,7 @@
 
 > Sistema web de organização automática de notas fiscais, recibos, boletos e garantias com IA (Claude) e Firebase.
 
-**Versão atual:** v1.0.33
+**Versão atual:** v1.0.34
 **Última atualização:** 12/05/2026
 **Construído por:** Ivan Silveira (com assistência do Claude da Anthropic)
 
@@ -217,6 +217,7 @@ Se mudar o `service-worker.js`, atualizar também a constante `CACHE_NAME` pra f
 | v1.0.31 | **Feedback visual durante re-análise**: adicionado cronômetro (mostra tempo decorrido em segundos/minutos), barra de progresso animada laranja (0→90% durante processamento, 100% no final), dica explicativa ("Pode levar de 30s a 2min"), e mudança de mensagem após 3s pra "🧠 Claude analisando o documento...". Função `showLoading()` refatorada pra aceitar opções `{ timer, progress, hint }` |
 | v1.0.32 | **Fix "Load failed" tardio em PDFs grandes**: 1) Adicionado `AbortController` no fetch com timeout de 9 minutos (mesmo timeout da Cloud Function); 2) `clearTimeout` no setTimeout da mudança de mensagem pra evitar disparar depois do hideLoading; 3) Mensagens de erro de rede ("Load failed", "network", "fetch", "AbortError") agora viram texto amigável: "O servidor demorou demais pra responder. O PDF é muito grande ou a conexão está instável. Tenta de novo conectado ao Wi-Fi." |
 | v1.0.33 | **Fix "[object Object]" em campos complexos**: quando Claude retornava estrutura aninhada (ex: exames com valor + referência + status polegar), o app mostrava literal "[object Object]". Solução: nova função `formatObjectValue()` que detecta objetos/arrays e formata legível. Heurística inteligente pra exames laboratoriais: detecta keys "valor/resultado" + "referencia" e formata como "👍 14,50 (ref: 13,5 a 17,5)". Layout dos campos no detalhe agora preserva quebras de linha com `white-space:pre-wrap`. Modal de edição usa `<textarea>` quando valor é multi-linha ou >60 chars |
+| v1.0.34 | **Fix "Faltam parametros" no upload normal**: quando o servidor foi reescrito pra `onRequest` na v1.0.30, o formato do payload mudou de `{model, max_tokens, messages}` (formato Claude API completo) pra `{base64, mediaType, prompt}` (formato simples). Mas o app `analyzeWithClaude` e `analyzeWithSmartFolder` ainda mandavam no formato antigo, causando 400 nos uploads normais. Corrigido pra mandar `{base64, mediaType, prompt}` e processar resposta `{text}`. `searchProductImage` desabilitada temporariamente (usava `tools` que o novo servidor não suporta — não é crítica) |
 
 ---
 

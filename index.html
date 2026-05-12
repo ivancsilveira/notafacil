@@ -669,7 +669,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.33 · 12/05/2026
+    Versão 1.0.34 · 12/05/2026
   </div>
 </div>
 
@@ -679,7 +679,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.33</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.34</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -866,10 +866,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.33</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.34</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-12 (v1.0.33 - fix [object Object] em campos complexos)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-12 (v1.0.34 - fix formato do callClaude após mudança do servidor)</span>
           </p>
         </div>
       </div>
@@ -2170,9 +2170,7 @@ IMPORTANTE — DOCUMENTOS COM VÁRIAS PÁGINAS:
 Se não conseguir identificar algum campo, use null. Para "tipo": nota_fiscal é cupom/NF de produtos, recibo é prestação de serviço, boleto é cobrança bancária. Se for foto borrada ou ilegível, marca tipo="outros" e resumo="Documento ilegível".`;
 
   const isImage = !mediaType.includes('pdf');
-  const sourceBlock = isImage
-    ? { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } }
-    : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } };
+  const finalMediaType = isImage ? mediaType : 'application/pdf';
 
   const response = await fetch(CLAUDE_PROXY_URL, {
     method: 'POST',
@@ -2180,12 +2178,9 @@ Se não conseguir identificar algum campo, use null. Para "tipo": nota_fiscal é
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 4096,
-      messages: [{
-        role: 'user',
-        content: [sourceBlock, { type: 'text', text: prompt }]
-      }]
+      base64: base64,
+      mediaType: finalMediaType,
+      prompt: prompt
     })
   });
 
@@ -2195,7 +2190,8 @@ Se não conseguir identificar algum campo, use null. Para "tipo": nota_fiscal é
   }
 
   const data = await response.json();
-  let text = data.content.map(c => c.text || '').join('').trim();
+  // Novo servidor retorna { text: "..." } direto
+  let text = (data.text || '').trim();
   // Remover possíveis markdown fences
   text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
@@ -2213,32 +2209,9 @@ async function searchProductImage(productName) {
   // Como alternativa, usamos uma busca simples via i.imgur ou um placeholder
   // Para simplicidade, vamos pedir pro Claude sugerir uma URL OU usar um placeholder
   try {
-    const query = encodeURIComponent(productName);
-    // Usamos a API pública do DuckDuckGo Instant Answer (não tem CORS aberto, então fallback)
-    // Melhor abordagem: pedir pro próprio Claude buscar uma URL de imagem
-    const response = await fetch(CLAUDE_PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 512,
-        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
-        messages: [{
-          role: 'user',
-          content: `Busque na web uma foto do produto: "${productName}". Retorne APENAS a URL direta de uma imagem (.jpg, .png, .webp) do produto, sem nenhum outro texto. Se não achar URL direta de imagem, retorne "NONE".`
-        }]
-      })
-    });
-
-    if (!response.ok) return null;
-    const data = await response.json();
-    const text = data.content.map(c => c.text || '').join('').trim();
-
-    // Extrair URL
-    const urlMatch = text.match(/https?:\/\/[^\s"'<>)]+\.(jpg|jpeg|png|webp)/i);
-    if (urlMatch) return urlMatch[0];
+    // ⚠️ Por enquanto, busca de imagem desativada — o servidor não suporta tools (web_search).
+    // O documento será salvo sem foto de produto. Não é crítico.
+    // TODO: implementar uma nova Cloud Function 'searchImage' se precisar.
     return null;
   } catch (e) {
     console.warn('Busca de imagem falhou:', e);
@@ -2599,20 +2572,15 @@ Regras:
 - Para textos, mantenha como veio do documento (ex: nomes próprios em maiúsculas)`;
 
   const isImage = !mediaType.includes('pdf');
-  const sourceBlock = isImage
-    ? { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } }
-    : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } };
+  const finalMediaType = isImage ? mediaType : 'application/pdf';
 
   const response = await fetch(CLAUDE_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 2048,
-      messages: [{
-        role: 'user',
-        content: [sourceBlock, { type: 'text', text: prompt }]
-      }]
+      base64: base64,
+      mediaType: finalMediaType,
+      prompt: prompt
     })
   });
 
@@ -2622,7 +2590,7 @@ Regras:
   }
 
   const data = await response.json();
-  let text = data.content.map(c => c.text || '').join('').trim();
+  let text = (data.text || '').trim();
   text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
   try {
