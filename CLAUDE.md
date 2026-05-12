@@ -2,7 +2,7 @@
 
 > Sistema web de organização automática de notas fiscais, recibos, boletos e garantias com IA (Claude) e Firebase.
 
-**Versão atual:** v1.0.30
+**Versão atual:** v1.0.31
 **Última atualização:** 12/05/2026
 **Construído por:** Ivan Silveira (com assistência do Claude da Anthropic)
 
@@ -213,7 +213,8 @@ Se mudar o `service-worker.js`, atualizar também a constante `CACHE_NAME` pra f
 | v1.0.27 | **Bug "Load failed" na re-análise corrigido**: Safari iOS bloqueava `fetch()` direto do Firebase Storage por CORS. Substituído por `getBytes()` da SDK do Firebase Storage (não tem problema de CORS porque usa autenticação interna). Conversão ArrayBuffer → base64 feita em chunks pra não estourar a stack em arquivos grandes |
 | v1.0.28 | **Bug "Max retry exceeded" em PDFs grandes corrigido**: re-análise de PDFs com 20+ páginas (5-15 MB) estourava timeout do Firebase. Solução: trocar `getBytes()` por `getDownloadURL()` + `fetch()` com `AbortController` (timeout de 5 min). Adicionado progresso real do download via `ReadableStream`: "Baixando... 30% (4.5/15 MB)". Mensagem de erro específica pra arquivo grande: "Arquivo muito grande ou conexão lenta. Tenta de novo conectado ao Wi-Fi." **Bug câmera QR scanner melhorado**: tratamento de erros específicos (NotAllowedError, NotFoundError, NotReadableError, OverconstrainedError, NotSupportedError) com mensagens contextuais e instruções iOS, mais botão "Use o botão 📷 Câmera comum que lê QR automaticamente" como alternativa |
 | v1.0.29 | **Bug ordenação "Últimos enviados" corrigido**: lista estava ordenada por `data` (data da compra/emissão) em vez de `criado_em` (momento do upload). Cadastrar um documento ANTIGO fazia ele aparecer no meio da lista em vez do topo. Agora ordena por `criado_em` desc (mais recentemente cadastrado primeiro) com fallback pra `data` em docs antigos sem timestamp. **Botão "Como importar do Drive" removido** da tela inicial — Ivan pode reativar depois se precisar. Botão "Escanear QR Code" renomeado pra "📱 Escanear QR Code (boleto físico)" pra deixar claro o uso ideal (boletos em papel ou em tela de outro dispositivo) |
-| v1.0.30 | 🚀 **Re-análise servidor-a-servidor**: nova Cloud Function `reanalyzeDoc` baixa o PDF direto do Firebase Storage (interno) e processa com o Claude. App nunca mais precisa baixar o arquivo pro celular. Resolve definitivamente o erro "Max retry exceeded" em PDFs grandes (20+ páginas / 10-15 MB). Velocidade: 5-10x mais rápido. Não consome dados móveis. Funciona em qualquer conexão (mesmo 3G ruim). Segurança: verifica auth do Firebase e que o photoPath pertence ao UID do usuário. URL: https://us-central1-notafacil-99434.cloudfunctions.net/reanalyzeDoc |
+| v1.0.30 | 🚀 **Re-análise servidor-a-servidor**: nova Cloud Function `reanalyzeDoc` baixa o PDF direto do Firebase Storage (interno) e processa com o Claude. App nunca mais precisa baixar o arquivo pro celular. Resolve definitivamente o erro "Max retry exceeded" em PDFs grandes (20+ páginas / 10-15 MB). Velocidade: 5-10x mais rápido. Não consome dados móveis. Funciona em qualquer conexão (mesmo 3G ruim). Segurança: verifica auth do Firebase e que o photoPath pertence ao UID do usuário. URL: https://reanalyzedoc-zy3i2tea5q-uc.a.run.app |
+| v1.0.31 | **Feedback visual durante re-análise**: adicionado cronômetro (mostra tempo decorrido em segundos/minutos), barra de progresso animada laranja (0→90% durante processamento, 100% no final), dica explicativa ("Pode levar de 30s a 2min"), e mudança de mensagem após 3s pra "🧠 Claude analisando o documento...". Função `showLoading()` refatorada pra aceitar opções `{ timer, progress, hint }` |
 
 ---
 
