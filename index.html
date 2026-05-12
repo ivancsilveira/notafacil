@@ -669,7 +669,7 @@
     Entrar com Google
   </button>
   <div style="margin-top: 24px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">
-    Versão 1.0.29 · 12/05/2026
+    Versão 1.0.30 · 12/05/2026
   </div>
 </div>
 
@@ -679,7 +679,7 @@
   <header class="header">
     <div class="logo">NF</div>
     <div style="flex:1;">
-      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.29</span></div>
+      <div class="header-title">NotaFácil <span style="font-size:11px;color:#FF6B35;font-weight:600;background:#FFF3E8;padding:3px 8px;border-radius:4px;margin-left:6px;border:1px solid #FFD4B8;">v1.0.30</span></div>
       <div class="header-sub" id="userName">Carregando...</div>
     </div>
     <div class="user-avatar" onclick="showScreen('config')">
@@ -866,10 +866,10 @@
         <div class="config-section">
           <h3>ℹ️ Sobre</h3>
           <p style="font-size:13px;color:#888;line-height:1.5;">
-            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.29</strong><br>
+            <strong style="font-size:15px;color:#FF6B35;">NotaFácil v1.0.30</strong><br>
             Organização automática de notas, recibos e garantias com IA.<br>
             Powered by Claude + Firebase.<br>
-            <span style="font-size:11px;color:#AAA;">Build: 2026-05-12 (v1.0.29 - ordem correta dos últimos enviados + remoção do botão nuvem)</span>
+            <span style="font-size:11px;color:#AAA;">Build: 2026-05-12 (v1.0.30 - re-análise servidor-a-servidor: PDFs gigantes funcionam!)</span>
           </p>
         </div>
       </div>
@@ -1447,6 +1447,8 @@ window.showScreen = showScreen;
 // ========== SERVIDOR NOTAFÁCIL (Cloud Function) ==========
 // A chave do Claude fica protegida no servidor, não precisa mais no navegador.
 const CLAUDE_PROXY_URL = 'https://callclaude-zy3i2tea5q-uc.a.run.app';
+// Função de re-análise servidor-a-servidor (rápida pra PDFs grandes)
+const REANALYZE_URL = 'https://us-central1-notafacil-99434.cloudfunctions.net/reanalyzeDoc';
 
 // Força recarregar o app ignorando o cache
 function forceReload() {
@@ -2723,111 +2725,56 @@ async function reanalyzeWithSmartFolder(docId) {
   if (!confirm(msg)) return;
 
   try {
-    showLoading('🔄 Baixando o documento...');
+    showLoading('☁️ Servidor processando o documento...');
 
-    // Baixa o arquivo do Firebase Storage
-    // Estratégia: pra arquivos grandes, getBytes() pode estourar timeout.
-    // Tentamos primeiro via getDownloadURL + fetch (mais tolerante a arquivos grandes).
-    let arrayBuffer;
-    try {
-      const { ref, getBytes, getDownloadURL } = window.fbHelpers;
+    // 🚀 NOVA ESTRATÉGIA (v1.0.30): em vez de baixar o PDF pro celular,
+    // chamamos a Cloud Function que baixa do Storage internamente (servidor a servidor).
+    // Vantagens: muito mais rápido, funciona com PDFs grandes, não usa dados móveis.
 
-      if (d.photoPath || d.photoUrl) {
-        // Pega a URL pública via SDK (sem CORS)
-        let downloadUrl = d.photoUrl;
-        if (d.photoPath && !downloadUrl) {
-          const fileRef = ref(window.fbStorage, d.photoPath);
-          downloadUrl = await getDownloadURL(fileRef);
-        }
-
-        // Tenta fetch com timeout customizado (5 minutos pra PDFs grandes)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min
-
-        try {
-          showLoading('🔄 Baixando o documento...');
-          const response = await fetch(downloadUrl, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          if (!response.ok) throw new Error('HTTP ' + response.status);
-
-          // Usa response.body com stream pra mostrar progresso se possível
-          const contentLength = response.headers.get('content-length');
-          if (contentLength && response.body) {
-            const total = parseInt(contentLength, 10);
-            const reader = response.body.getReader();
-            const chunks = [];
-            let received = 0;
-
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              chunks.push(value);
-              received += value.length;
-              const pct = Math.round((received / total) * 100);
-              const sizeMb = (received / (1024 * 1024)).toFixed(1);
-              const totalMb = (total / (1024 * 1024)).toFixed(1);
-              showLoading(`🔄 Baixando... ${pct}% (${sizeMb}/${totalMb} MB)`);
-            }
-
-            // Junta os chunks em um único ArrayBuffer
-            const totalLen = chunks.reduce((a, c) => a + c.length, 0);
-            const merged = new Uint8Array(totalLen);
-            let offset = 0;
-            for (const c of chunks) {
-              merged.set(c, offset);
-              offset += c.length;
-            }
-            arrayBuffer = merged.buffer;
-          } else {
-            // Sem content-length: baixa tudo de uma vez
-            arrayBuffer = await response.arrayBuffer();
-          }
-        } catch (fetchErr) {
-          clearTimeout(timeoutId);
-          // Se fetch falhou (CORS, etc.), tenta com getBytes como fallback
-          console.warn('Fetch falhou, tentando getBytes:', fetchErr);
-          if (d.photoPath) {
-            showLoading('🔄 Tentando outro método...');
-            const fileRef = ref(window.fbStorage, d.photoPath);
-            arrayBuffer = await getBytes(fileRef);
-          } else {
-            throw fetchErr;
-          }
-        }
-      } else {
-        throw new Error('Documento sem arquivo (talvez tenha sido criado via QR Code escaneado)');
-      }
-    } catch (downloadErr) {
-      console.error('Erro no download:', downloadErr);
-
-      // Mensagem específica pra arquivo muito grande
-      const errMsg = (downloadErr.message || '').toLowerCase();
-      if (errMsg.includes('retry') || errMsg.includes('exceeded') || errMsg.includes('timeout')) {
-        throw new Error('Arquivo muito grande ou conexão lenta. Tenta de novo conectado ao Wi-Fi.');
-      }
-      throw new Error('Não consegui baixar: ' + (downloadErr.message || downloadErr));
+    if (!d.photoPath) {
+      throw new Error('Este documento foi criado via QR Code (sem arquivo). Não dá pra re-analisar.');
     }
 
-    showLoading('📦 Processando arquivo...');
-
-    // Converte ArrayBuffer pra base64 (em chunks pra não travar)
-    const bytes = new Uint8Array(arrayBuffer);
-    const sizeMb = (bytes.length / (1024 * 1024)).toFixed(1);
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
-    }
-    const base64 = btoa(binary);
+    // Pega o token do usuário atual pra autenticação
+    const token = await window.fbAuth.currentUser.getIdToken();
 
     // Detecta tipo
-    const isPdf = (d.photoPath || d.photoUrl || '').toLowerCase().includes('.pdf');
+    const isPdf = (d.photoPath || '').toLowerCase().includes('.pdf');
     const mediaType = isPdf ? 'application/pdf' : 'image/jpeg';
 
-    showLoading(`🧠 Claude analisando ${sizeMb}MB com instrução da pasta...`);
+    showLoading('🧠 Claude analisando no servidor (pode levar 30s a 2min)...');
 
-    // Chama Claude
-    const extraFields = await analyzeWithSmartFolder(base64, mediaType, folder.description);
+    // Chama a Cloud Function de re-análise
+    const response = await fetch(REANALYZE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        docId: d.id,
+        photoPath: d.photoPath,
+        folderDescription: folder.description,
+        mediaType: mediaType
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Erro do servidor:', errText);
+      let errMsg = 'Servidor retornou erro ' + response.status;
+      try {
+        const errJson = JSON.parse(errText);
+        if (errJson.error) errMsg = errJson.error;
+      } catch (e) {}
+      throw new Error(errMsg);
+    }
+
+    const result = await response.json();
+    const extraFields = result.extraFields;
+    if (!extraFields) {
+      throw new Error('Servidor não retornou os campos');
+    }
 
     hideLoading();
 
